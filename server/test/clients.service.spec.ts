@@ -1,8 +1,8 @@
-import { ConflictException } from '@nestjs/common'
-import { ClientsService } from '../src/modules/clients/clients.service'
-import { type CreateClientDto } from '../src/modules/clients/dto/create-client.dto'
-import { type PrismaService } from '../src/prisma/prisma.service'
-import { type AuditService } from '../src/modules/audit/audit.service'
+import { ClientsService } from '../src/services/clients/clients.service'
+import { type CreateClientDto } from '../src/controllers/clients/dto/create-client.dto'
+import { type PrismaService } from '../src/services/prisma/prisma.service'
+import { type AuditService } from '../src/services/audit/audit.service'
+import { ApiError } from '../src/services/common/errors/api-error'
 
 const createService = () => {
   const prisma = {
@@ -65,6 +65,7 @@ describe('ClientsService', () => {
       type: 'legal',
       inn: '7700000000'
     }
-    await expect(service.create('user-1', payload)).rejects.toBeInstanceOf(ConflictException)
+    await expect(service.create('user-1', payload)).rejects.toBeInstanceOf(ApiError)
+    await expect(service.create('user-1', payload)).rejects.toMatchObject({ code: 'DUPLICATE_CLIENT', status: 409 })
   })
 })

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { usersApi } from '../api/users'
-import { type Role, type User } from '../api/types'
-import { useAuth } from '../state/auth'
+import { usersApi } from '../services/users'
+import { type Role, type User } from '../services/types'
+import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { ConfirmDialog } from '../components/confirm-dialog'
+import { RetryPanel } from '../components/retry-panel'
 
 export default function UsersPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -14,6 +15,7 @@ export default function UsersPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ email: '', password: '', role: 'manager' as Role })
   const [confirmState, setConfirmState] = useState({ isOpen: false, title: '', description: '', onConfirm: null as null | (() => void) })
+  const [reloadKey, setReloadKey] = useState(0)
 
   const canManageUsers = role === 'admin'
   const roles: Role[] = ['admin', 'manager', 'operator', 'analyst']
@@ -33,7 +35,12 @@ export default function UsersPage() {
       .then((res) => setData(res))
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, canManageUsers])
+  }, [initialized, isAuthenticated, canManageUsers, reloadKey])
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   if (!canManageUsers) {
     return (
@@ -159,7 +166,7 @@ export default function UsersPage() {
           <div className="skeleton-card" />
         </div>
       )}
-      {error && <div className="form-error">{error}</div>}
+      {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (

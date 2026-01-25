@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ordersApi } from '../api/orders'
-import { type Order, type Client, type Product, type OrderStatus, type User } from '../api/types'
-import { useAuth } from '../state/auth'
-import { clientsApi } from '../api/clients'
-import { catalogApi } from '../api/catalog'
+import { ordersApi } from '../services/orders'
+import { type Order, type Client, type Product, type OrderStatus, type User } from '../services/types'
+import { useAuth } from '../utils/auth'
+import { clientsApi } from '../services/clients'
+import { catalogApi } from '../services/catalog'
 import { Link, useLocation } from 'react-router-dom'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
-import { useToast } from '../state/toast'
-import { usersApi } from '../api/users'
+import { useToast } from '../utils/toast'
+import { usersApi } from '../services/users'
+import { RetryPanel } from '../components/retry-panel'
 
 export default function OrdersPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -31,6 +32,7 @@ export default function OrdersPage() {
   const addToast = useToast((state) => state.add)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const location = useLocation()
+  const [reloadKey, setReloadKey] = useState(0)
 
   const orderStatuses: { value: OrderStatus, label: string }[] = [
     { value: 'new', label: 'Новый' },
@@ -49,10 +51,17 @@ export default function OrdersPage() {
   }
   const overdueDays = 7
   const overdueThreshold = Date.now() - overdueDays * 24 * 60 * 60 * 1000
+  const criticalDays = 14
+  const criticalThreshold = Date.now() - criticalDays * 24 * 60 * 60 * 1000
   const isOrderOverdue = (order: Order) => {
     if (order.status === 'done' || order.status === 'canceled') return false
     const createdAt = new Date(order.createdAt).getTime()
     return Number.isFinite(createdAt) && createdAt < overdueThreshold
+  }
+  const isOrderCritical = (order: Order) => {
+    if (order.status === 'done' || order.status === 'canceled') return false
+    const createdAt = new Date(order.createdAt).getTime()
+    return Number.isFinite(createdAt) && createdAt < criticalThreshold
   }
 
   const canWrite = role === 'admin' || role === 'manager' || role === 'operator'
@@ -147,7 +156,12 @@ export default function OrdersPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, page, pageSize, filters, canReadCatalog, sortBy, sortDir])
+  }, [initialized, isAuthenticated, page, pageSize, filters, canReadCatalog, sortBy, sortDir, reloadKey])
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -241,7 +255,7 @@ export default function OrdersPage() {
           <div className="skeleton-card" />
         </div>
       )}
-      {error && <div className="form-error">{error}</div>}
+      {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (
@@ -268,13 +282,16 @@ export default function OrdersPage() {
                 <tbody>
                   {data.map((o) => {
                     const isOverdue = isOrderOverdue(o)
+                    const isCritical = isOrderCritical(o)
+                    const rowClass = isCritical ? 'is-critical' : isOverdue ? 'is-overdue' : undefined
                     return (
-                    <tr key={o.id} className={isOverdue ? 'is-overdue' : undefined}>
+                    <tr key={o.id} className={rowClass}>
                       <td><Link to={`/orders/${o.id}`}>{o.id}</Link></td>
                       <td>{o.clientName ?? clients.find((c) => c.id === o.clientId)?.name ?? o.clientId}</td>
                       <td>
                         <span className={statusClass(o.status)}>{statusLabel(o.status)}</span>
                         {isOverdue && <span className="badge danger overdue-badge">Просрочен</span>}
+                        {isCritical && <span className="badge critical overdue-badge">Критичный</span>}
                       </td>
                       <td className="text-right">{formatCurrency(o.totalAmount ?? o.total)}</td>
                       <td>

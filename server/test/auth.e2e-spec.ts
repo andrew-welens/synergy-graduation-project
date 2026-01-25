@@ -1,61 +1,33 @@
-import { type ExecutionContext, ValidationPipe } from '@nestjs/common'
-import { Test } from '@nestjs/testing'
-import { type INestApplication } from '@nestjs/common'
 import request from 'supertest'
-import { AuthController } from '../src/modules/auth/auth.controller'
-import { AuthService } from '../src/modules/auth/auth.service'
-import { ResponseInterceptor } from '../src/common/interceptors/response.interceptor'
-import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard'
+import { createAuthRouter } from '../src/controllers/auth/auth.controller'
+import { type AuthService } from '../src/services/auth/auth.service'
+import { createTestApp } from './utils/create-test-app'
+import type { RequestUser } from '../src/services/types/request-user'
+import type { PrismaService } from '../src/services/prisma/prisma.service'
 
 describe('AuthController (e2e)', () => {
-  let app: INestApplication
-  const authGuard = {
-    canActivate: (context: ExecutionContext) => {
-      const req = context.switchToHttp().getRequest()
-      req.user = {
-        id: 'user-1',
-        email: 'user@example.com',
-        role: 'admin',
-        permissions: ['clients.read']
-      }
-      return true
-    }
-  }
-  const authService = {
+  const authService: Pick<AuthService, 'login' | 'refresh'> = {
     login: jest.fn().mockResolvedValue({ accessToken: 'access-token', refreshToken: 'refresh-token' }),
     refresh: jest.fn().mockResolvedValue({ accessToken: 'new-access-token' })
   }
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      controllers: [AuthController],
-      providers: [
-        { provide: AuthService, useValue: authService }
-      ]
-    })
-      .overrideGuard(JwtAuthGuard)
-      .useValue(authGuard)
-      .compile()
-
-    app = moduleRef.createNestApplication()
-    app.useGlobalInterceptors(new ResponseInterceptor())
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true
-      })
-    )
-    await app.init()
-  })
-
-  afterAll(async () => {
-    if (app) {
-      await app.close()
+  const user: RequestUser = {
+    id: 'user-1',
+    email: 'user@example.com',
+    role: 'admin',
+    permissions: ['clients.read']
+  }
+  const prisma = {
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ id: user.id, email: user.email, role: user.role })
     }
-  })
+  } as unknown as PrismaService
+  const { app, token } = createTestApp(
+    [{ path: '/api/auth', router: createAuthRouter(authService as AuthService, prisma) }],
+    user
+  )
 
   it('POST /api/auth/login', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .post('/api/auth/login')
       .send({ email: 'user@example.com', password: 'password123' })
       .expect(201)
@@ -66,7 +38,7 @@ describe('AuthController (e2e)', () => {
   })
 
   it('POST /api/auth/refresh', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .post('/api/auth/refresh')
       .send({ refreshToken: 'refresh-token' })
       .expect(200)
@@ -76,7 +48,7 @@ describe('AuthController (e2e)', () => {
   })
 
   it('POST /api/auth/logout', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .post('/api/auth/logout')
       .expect(200)
       .expect((res) => {
@@ -85,8 +57,9 @@ describe('AuthController (e2e)', () => {
   })
 
   it('GET /api/auth/me', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .get('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect((res) => {
         expect(res.body.data.id).toBe('user-1')

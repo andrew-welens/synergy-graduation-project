@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type MouseEvent } from 'react'
-import { clientsApi } from '../api/clients'
-import { type Client } from '../api/types'
-import { useAuth } from '../state/auth'
+import { clientsApi } from '../services/clients'
+import { type Client } from '../services/types'
+import { useAuth } from '../utils/auth'
 import { Link } from 'react-router-dom'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { ConfirmDialog } from '../components/confirm-dialog'
-import { useToast } from '../state/toast'
+import { RetryPanel } from '../components/retry-panel'
+import { useToast } from '../utils/toast'
 
 export default function ClientsPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -31,6 +32,7 @@ export default function ClientsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
   const [confirmState, setConfirmState] = useState({ isOpen: false, title: '', description: '', onConfirm: null as null | (() => void) })
+  const [reloadKey, setReloadKey] = useState(0)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const addToast = useToast((state) => state.add)
 
@@ -204,7 +206,12 @@ export default function ClientsPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, onlyWithOrders, search, typeFilter, page, pageSize, sortBy, sortDir])
+  }, [initialized, isAuthenticated, onlyWithOrders, search, typeFilter, page, pageSize, sortBy, sortDir, reloadKey])
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -345,7 +352,7 @@ export default function ClientsPage() {
           <div className="skeleton-card" />
         </div>
       )}
-      {error && <div className="form-error">{error}</div>}
+      {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (
@@ -444,7 +451,17 @@ export default function ClientsPage() {
                 {fieldError('email') && <div className="form-error">{fieldError('email')}</div>}
               </div>
               <div>
-                <input className="input" placeholder="+7 ___ ___-__-__" value={formMode === 'create' ? form.phone : editForm.phone} inputMode="numeric" autoComplete="tel" maxLength={16} onChange={(e) => updateActiveForm({ phone: formatPhone(e.target.value) })} />
+                <input
+                  className="input"
+                  placeholder="+7 ___ ___-__-__"
+                  value={formMode === 'create' ? form.phone : editForm.phone}
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={16}
+                  pattern="^\+7 \d{3} \d{3}-\d{2}-\d{2}$"
+                  title="Формат: +7 900 000-00-00"
+                  onChange={(e) => updateActiveForm({ phone: formatPhone(e.target.value) })}
+                />
                 {fieldError('phone') && <div className="form-error">{fieldError('phone')}</div>}
               </div>
               <div>
@@ -454,7 +471,17 @@ export default function ClientsPage() {
                 </select>
               </div>
               <div>
-                <input className="input" placeholder="ИНН (для юрлиц)" value={formMode === 'create' ? form.inn : editForm.inn} required={(formMode === 'create' ? form.type : editForm.type) === 'legal'} inputMode="numeric" maxLength={10} onChange={(e) => updateActiveForm({ inn: normalizeInn(e.target.value) })} />
+                <input
+                  className="input"
+                  placeholder="ИНН (для юрлиц)"
+                  value={formMode === 'create' ? form.inn : editForm.inn}
+                  required={(formMode === 'create' ? form.type : editForm.type) === 'legal'}
+                  inputMode="numeric"
+                  maxLength={10}
+                  pattern="^\d{10}$"
+                  title="ИНН должен состоять из 10 цифр"
+                  onChange={(e) => updateActiveForm({ inn: normalizeInn(e.target.value) })}
+                />
                 {fieldError('inn') && <div className="form-error">{fieldError('inn')}</div>}
               </div>
               <div>

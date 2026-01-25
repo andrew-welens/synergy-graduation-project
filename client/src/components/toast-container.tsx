@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react'
-import { useToast } from '../state/toast'
+import { useToast } from '../utils/toast'
 
 export const ToastContainer = (): ReactElement | null => {
   const items = useToast((state) => state.items)

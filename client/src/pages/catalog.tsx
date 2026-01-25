@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { catalogApi } from '../api/catalog'
-import { type Category, type Product } from '../api/types'
-import { useAuth } from '../state/auth'
+import { catalogApi } from '../services/catalog'
+import { type Category, type Product } from '../services/types'
+import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
+import { RetryPanel } from '../components/retry-panel'
 
 export default function CatalogPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -32,6 +33,7 @@ export default function CatalogPage() {
   const productsPageSize = 20
   const categoriesTotalPages = Math.max(1, Math.ceil(categoriesTotal / categoriesPageSize))
   const productsTotalPages = Math.max(1, Math.ceil(productsTotal / productsPageSize))
+  const [reloadKey, setReloadKey] = useState(0)
   const sortedCategories = [...categories].sort((a, b) => {
     const multiplier = categorySortDir === 'asc' ? 1 : -1
     if (categorySortBy === 'createdAt') {
@@ -99,7 +101,12 @@ export default function CatalogPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, canRead, categorySearch, productSearch, productCategoryId, productAvailability, categoryPage, productPage, categoriesPageSize, productsPageSize])
+  }, [initialized, isAuthenticated, canRead, categorySearch, productSearch, productCategoryId, productAvailability, categoryPage, productPage, categoriesPageSize, productsPageSize, reloadKey])
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   if (!canRead) {
     return (
@@ -287,7 +294,7 @@ export default function CatalogPage() {
             <div className="skeleton-card" />
           </div>
         )}
-        {error && <div className="form-error">{error}</div>}
+        {error && <RetryPanel message={error} onRetry={handleRetry} />}
         {canWrite && editingCategoryId && (
           <form className="grid" style={{ gap: 8, gridTemplateColumns: '1fr 1fr auto', marginBottom: 12 }} onSubmit={handleUpdateCategory}>
             <input className="input" required placeholder="Название" value={editCategoryForm.name} onChange={(e) => setEditCategoryForm((f) => ({ ...f, name: e.target.value }))} />
@@ -406,7 +413,7 @@ export default function CatalogPage() {
             <div className="skeleton-card" />
           </div>
         )}
-        {error && <div className="form-error">{error}</div>}
+        {error && <RetryPanel message={error} onRetry={handleRetry} />}
         {canWrite && editingProductId && (
           <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 12 }} onSubmit={handleUpdateProduct}>
             <input className="input" required placeholder="Название" value={editProductForm.name} onChange={(e) => setEditProductForm((f) => ({ ...f, name: e.target.value }))} />

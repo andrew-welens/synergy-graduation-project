@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../state/auth'
+import { useAuth } from '../utils/auth'
+import { type Role } from '../services/types'
 
-export default function Protected({ children }: { children: React.ReactNode }) {
+export default function Protected({ children, roles }: { children: React.ReactNode, roles?: Role[] }) {
   const { isAuthenticated, initialized, ensure } = useAuth()
+  const role = useAuth((state) => state.role)
   const location = useLocation()
 
   useEffect(() => {
@@ -15,6 +17,9 @@ export default function Protected({ children }: { children: React.ReactNode }) {
   }
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />
+  }
+  if (roles && (!role || !roles.includes(role))) {
+    return <Navigate to="/forbidden" state={{ from: location }} replace />
   }
   return children
 }

@@ -1,54 +1,35 @@
-import { ValidationPipe } from '@nestjs/common'
-import { Test } from '@nestjs/testing'
-import { type INestApplication } from '@nestjs/common'
 import request from 'supertest'
-import { ReportsController } from '../src/modules/reports/reports.controller'
-import { ReportsService } from '../src/modules/reports/reports.service'
-import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard'
-import { RolesGuard } from '../src/common/guards/roles.guard'
-import { ResponseInterceptor } from '../src/common/interceptors/response.interceptor'
-import { ApiExceptionFilter } from '../src/common/filters/api-exception.filter'
+import { createReportsRouter } from '../src/controllers/reports/reports.controller'
+import { type ReportsService } from '../src/services/reports/reports.service'
+import { createTestApp } from './utils/create-test-app'
+import type { RequestUser } from '../src/services/types/request-user'
+import type { PrismaService } from '../src/services/prisma/prisma.service'
 
 describe('ReportsController (e2e)', () => {
-  let app: INestApplication
-  const reportsService = {
+  const reportsService: Partial<ReportsService> = {
     orders: jest.fn().mockResolvedValue({ groupBy: 'status', data: [] }),
     overdue: jest.fn().mockResolvedValue({ data: [], total: 0, days: 7 })
   }
-
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      controllers: [ReportsController],
-      providers: [{ provide: ReportsService, useValue: reportsService }]
-    })
-      .overrideGuard(JwtAuthGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true })
-      .compile()
-
-    app = moduleRef.createNestApplication()
-    app.useGlobalInterceptors(new ResponseInterceptor())
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true
-      })
-    )
-    app.useGlobalFilters(new ApiExceptionFilter())
-    await app.init()
-  })
-
-  afterAll(async () => {
-    if (app) {
-      await app.close()
+  const user: RequestUser = {
+    id: 'user-1',
+    email: 'admin@example.com',
+    role: 'admin',
+    permissions: []
+  }
+  const prisma = {
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ id: user.id, email: user.email, role: user.role })
     }
-  })
+  } as unknown as PrismaService
+  const { app, token } = createTestApp(
+    [{ path: '/api/reports', router: createReportsRouter(reportsService as ReportsService, prisma) }],
+    user
+  )
 
   it('GET /api/reports/orders', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .get('/api/reports/orders')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect((res) => {
         expect(Array.isArray(res.body.data.data)).toBe(true)
@@ -56,8 +37,9 @@ describe('ReportsController (e2e)', () => {
   })
 
   it('GET /api/reports/overdue', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .get('/api/reports/overdue')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect((res) => {
         expect(Array.isArray(res.body.data.data)).toBe(true)

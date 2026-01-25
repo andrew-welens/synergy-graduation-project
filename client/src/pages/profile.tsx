@@ -1,4 +1,4 @@
-import { useAuth } from '../state/auth'
+import { useAuth } from '../utils/auth'
 
 export default function ProfilePage() {
   const { role, userId } = useAuth()

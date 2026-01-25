@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { interactionsApi } from '../api/interactions'
-import { type Interaction } from '../api/types'
-import { useAuth } from '../state/auth'
+import { interactionsApi } from '../services/interactions'
+import { type Interaction } from '../services/types'
+import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
 import { ConfirmDialog } from '../components/confirm-dialog'
+import { RetryPanel } from '../components/retry-panel'
 
 export default function InteractionsPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -24,6 +25,7 @@ export default function InteractionsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ channel: '', description: '' })
   const [confirmState, setConfirmState] = useState({ isOpen: false, title: '', description: '', onConfirm: null as null | (() => void) })
+  const [reloadKey, setReloadKey] = useState(0)
 
   const canWrite = role === 'admin' || role === 'manager' || role === 'operator'
   const canDelete = role === 'admin' || role === 'manager'
@@ -50,7 +52,12 @@ export default function InteractionsPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, clientId, page, pageSize, channelFilter, dateFrom, dateTo])
+  }, [initialized, isAuthenticated, clientId, page, pageSize, channelFilter, dateFrom, dateTo, reloadKey])
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -181,7 +188,7 @@ export default function InteractionsPage() {
           <div className="skeleton-card" />
         </div>
       )}
-      {error && <div className="form-error">{error}</div>}
+      {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (

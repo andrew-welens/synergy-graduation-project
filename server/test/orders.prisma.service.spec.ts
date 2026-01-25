@@ -1,7 +1,7 @@
-import { ForbiddenException } from '@nestjs/common'
-import { OrdersPrismaService } from '../src/modules/orders/orders.prisma.service'
-import { OrderStatus } from '../src/types/models'
-import { type PrismaService } from '../src/prisma/prisma.service'
+import { OrdersPrismaService } from '../src/services/orders/orders.prisma.service'
+import { OrderStatus } from '../src/services/types/models'
+import { type PrismaService } from '../src/services/prisma/prisma.service'
+import { ApiError } from '../src/services/common/errors/api-error'
 
 const createService = () => {
   const prisma = {
@@ -29,7 +29,8 @@ describe('OrdersPrismaService', () => {
       completedAt: undefined,
       items: []
     })
-    await expect(service.updateStatus('user-1', 'operator', 'order-1', { status: OrderStatus.Done })).rejects.toBeInstanceOf(ForbiddenException)
+    await expect(service.updateStatus('user-1', 'operator', 'order-1', { status: OrderStatus.Done })).rejects.toBeInstanceOf(ApiError)
+    await expect(service.updateStatus('user-1', 'operator', 'order-1', { status: OrderStatus.Done })).rejects.toMatchObject({ code: 'FORBIDDEN', status: 403 })
     expect(prisma.order.update).not.toHaveBeenCalled()
   })
 

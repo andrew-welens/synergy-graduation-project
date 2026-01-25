@@ -72,6 +72,9 @@ model Order {
   client      Client      @relation(fields: [clientId], references: [id])
   items       OrderItem[]
   history     OrderStatusHistory[]
+
+  @@index([status, createdAt])
+  @@index([managerId, status])
 }
 
 model OrderItem {

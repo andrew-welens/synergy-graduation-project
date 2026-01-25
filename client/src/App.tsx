@@ -32,9 +32,30 @@ const routes: RouteObject[] = [
       { path: 'catalog', element: <CatalogPage /> },
       { path: 'clients/:clientId', element: <ClientDetailPage /> },
       { path: 'clients/:clientId/interactions', element: <InteractionsPage /> },
-      { path: 'audit', element: <AuditPage /> },
-      { path: 'reports', element: <ReportsPage /> },
-      { path: 'users', element: <UsersPage /> },
+      {
+        path: 'audit',
+        element: (
+          <Protected roles={['admin', 'analyst']}>
+            <AuditPage />
+          </Protected>
+        )
+      },
+      {
+        path: 'reports',
+        element: (
+          <Protected roles={['admin', 'manager', 'analyst']}>
+            <ReportsPage />
+          </Protected>
+        )
+      },
+      {
+        path: 'users',
+        element: (
+          <Protected roles={['admin']}>
+            <UsersPage />
+          </Protected>
+        )
+      },
       { path: 'profile', element: <ProfilePage /> }
     ]
   },

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { reportsApi, type OrdersReportResponse, type OverdueReportResponse } from '../api/reports'
-import { type OrderStatus } from '../api/types'
-import { useAuth } from '../state/auth'
+import { reportsApi, type OrdersReportResponse, type OverdueReportResponse } from '../services/reports'
+import { type OrderStatus } from '../services/types'
+import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
+import { RetryPanel } from '../components/retry-panel'
 import * as XLSX from 'xlsx'
 import { Link } from 'react-router-dom'
-import { ordersApi } from '../api/orders'
-import { catalogApi } from '../api/catalog'
+import { ordersApi } from '../services/orders'
+import { catalogApi } from '../services/catalog'
 
 export default function ReportsPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -30,6 +31,7 @@ export default function ReportsPage() {
   const [overdueDays, setOverdueDays] = useState('7')
   const [overduePage, setOverduePage] = useState(1)
   const overduePageSize = 20
+  const [reloadKey, setReloadKey] = useState(0)
   const overdueDaysNumber = Number(overdueDays)
   const appliedOverdueDays = Number.isFinite(overdueDaysNumber) && overdueDaysNumber > 0 ? overdueDaysNumber : (overdue?.days ?? 7)
   const thresholdDate = new Date(Date.now() - appliedOverdueDays * 24 * 60 * 60 * 1000)
@@ -203,7 +205,12 @@ export default function ReportsPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, filters, overdueDays, overduePage, overduePageSize])
+  }, [initialized, isAuthenticated, filters, overdueDays, overduePage, overduePageSize, reloadKey])
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   const totalPages = Math.max(1, Math.ceil((data?.data.length ?? 0) / pageSize))
   const overdueTotalPages = Math.max(1, Math.ceil((overdue?.total ?? 0) / overduePageSize))
@@ -242,7 +249,7 @@ export default function ReportsPage() {
           <div className="skeleton-card" />
         </div>
       )}
-      {error && <div className="form-error">{error}</div>}
+      {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && data && (
         <>
           {pagedData.length === 0 ? (
@@ -304,7 +311,7 @@ export default function ReportsPage() {
             <div className="skeleton-card" />
           </div>
         )}
-        {error && <div className="form-error">{error}</div>}
+        {error && <RetryPanel message={error} onRetry={handleRetry} />}
         {!loading && !error && overdue && (
           <>
             {overdue.data.length === 0 ? (

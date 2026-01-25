@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ordersApi } from '../api/orders'
-import { catalogApi } from '../api/catalog'
-import { clientsApi } from '../api/clients'
-import { type Order, type Product, type Client, type OrderStatus } from '../api/types'
-import { useAuth } from '../state/auth'
+import { ordersApi } from '../services/orders'
+import { catalogApi } from '../services/catalog'
+import { clientsApi } from '../services/clients'
+import { type Order, type Product, type Client, type OrderStatus } from '../services/types'
+import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
-import { useToast } from '../state/toast'
+import { useToast } from '../utils/toast'
 import { ConfirmDialog } from '../components/confirm-dialog'
+import { auditApi, type AuditEntry } from '../services/audit'
+import { RetryPanel } from '../components/retry-panel'
 
 export default function OrderDetailPage() {
   const { orderId } = useParams()
@@ -26,6 +28,8 @@ export default function OrderDetailPage() {
   const [commentsValue, setCommentsValue] = useState('')
   const [statusConfirmOpen, setStatusConfirmOpen] = useState(false)
   const [pendingStatus, setPendingStatus] = useState<OrderStatus | ''>('')
+  const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([])
+  const [reloadKey, setReloadKey] = useState(0)
   const addToast = useToast((state) => state.add)
 
   const orderStatuses: { value: OrderStatus, label: string }[] = [
@@ -38,6 +42,7 @@ export default function OrderDetailPage() {
   const canWrite = role === 'admin' || role === 'manager' || role === 'operator'
   const canEditOrder = role === 'admin' || role === 'manager'
   const canReadCatalog = role === 'admin' || role === 'manager' || role === 'operator'
+  const canReadAudit = role === 'admin' || role === 'analyst'
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(value)
 
@@ -72,10 +77,12 @@ export default function OrderDetailPage() {
     if (!orderId || !initialized || !isAuthenticated) return
     startLoading()
     Promise.all([
-      ordersApi.get(orderId)
+      ordersApi.get(orderId),
+      canReadAudit ? auditApi.list({ page: 1, pageSize: 20, entityType: 'order', entityId: orderId }) : Promise.resolve({ data: [], total: 0 })
     ])
-      .then(async ([o]) => {
+      .then(async ([o, auditRes]) => {
         setOrder(o)
+        setAuditEntries(auditRes.data)
         if (canReadCatalog) {
           const prods = await catalogApi.products({ page: 1, pageSize: 200 })
           setProducts(prods.data)
@@ -90,9 +97,14 @@ export default function OrderDetailPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [orderId, initialized, isAuthenticated, canReadCatalog])
+  }, [orderId, initialized, isAuthenticated, canReadCatalog, canReadAudit, reloadKey])
 
   if (!orderId) return <div className="page">Заказ не найден</div>
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault()
@@ -233,7 +245,7 @@ export default function OrderDetailPage() {
             <div className="skeleton-line" />
           </div>
         )}
-        {error && <div className="form-error">{error}</div>}
+        {error && <RetryPanel message={error} onRetry={handleRetry} />}
         {order && (
           <div className="grid" style={{ gap: 10 }}>
             <div className="grid" style={{ gap: 6 }}>
@@ -294,6 +306,35 @@ export default function OrderDetailPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+            {canReadAudit && (
+              <div className="grid" style={{ gap: 8 }}>
+                <h4>Аудит изменений</h4>
+                {auditEntries.length === 0 ? (
+                  <div className="empty-state">Записей аудита нет</div>
+                ) : (
+                  <div className="table-wrap">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Действие</th>
+                          <th>Дата</th>
+                          <th>Исполнитель</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {auditEntries.map((entry) => (
+                          <tr key={entry.id}>
+                            <td>{entry.action}</td>
+                            <td>{new Date(entry.createdAt).toLocaleString()}</td>
+                            <td>{entry.actorId ?? '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>

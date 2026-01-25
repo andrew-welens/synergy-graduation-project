@@ -1,59 +1,38 @@
-import { ValidationPipe } from '@nestjs/common'
-import { Test } from '@nestjs/testing'
-import { type INestApplication } from '@nestjs/common'
 import request from 'supertest'
-import { OrdersController } from '../src/modules/orders/orders.controller'
-import { OrdersService } from '../src/modules/orders/orders.service'
-import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard'
-import { RolesGuard } from '../src/common/guards/roles.guard'
-import { ResponseInterceptor } from '../src/common/interceptors/response.interceptor'
-import { ApiExceptionFilter } from '../src/common/filters/api-exception.filter'
-import { OrderStatus } from '../src/types/models'
+import { OrderStatus } from '../src/services/types/models'
+import { createOrdersRouter } from '../src/controllers/orders/orders.controller'
+import { type OrdersService } from '../src/services/orders/orders.service'
+import { createTestApp } from './utils/create-test-app'
+import type { RequestUser } from '../src/services/types/request-user'
+import type { PrismaService } from '../src/services/prisma/prisma.service'
 
 describe('OrdersController (e2e)', () => {
-  let app: INestApplication
-  const ordersService = {
+  const ordersService: Partial<OrdersService> = {
     findAll: jest.fn().mockResolvedValue({ data: [], total: 0 }),
     findOne: jest.fn().mockResolvedValue({ id: 'order-1', clientId: 'client-1', status: OrderStatus.New, total: 100, items: [], createdAt: new Date(), updatedAt: new Date() }),
     create: jest.fn().mockResolvedValue({ id: 'order-1', clientId: 'client-1', status: OrderStatus.New, total: 100, items: [], createdAt: new Date(), updatedAt: new Date() }),
     updateStatus: jest.fn().mockResolvedValue({ id: 'order-1', clientId: 'client-1', status: OrderStatus.InProgress, total: 100, items: [], createdAt: new Date(), updatedAt: new Date() })
   }
-
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      controllers: [OrdersController],
-      providers: [
-        { provide: OrdersService, useValue: ordersService }
-      ]
-    })
-      .overrideGuard(JwtAuthGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true })
-      .compile()
-
-    app = moduleRef.createNestApplication()
-    app.useGlobalInterceptors(new ResponseInterceptor())
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true
-      })
-    )
-    app.useGlobalFilters(new ApiExceptionFilter())
-    await app.init()
-  })
-
-  afterAll(async () => {
-    if (app) {
-      await app.close()
+  const user: RequestUser = {
+    id: 'user-1',
+    email: 'admin@example.com',
+    role: 'admin',
+    permissions: []
+  }
+  const prisma = {
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ id: user.id, email: user.email, role: user.role })
     }
-  })
+  } as unknown as PrismaService
+  const { app, token } = createTestApp(
+    [{ path: '/api/orders', router: createOrdersRouter(ordersService as OrdersService, prisma) }],
+    user
+  )
 
   it('POST /api/orders', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .post('/api/orders')
+      .set('Authorization', `Bearer ${token}`)
       .send({ clientId: 'client-1', items: [{ productId: 'product-1', quantity: 1, price: 100 }] })
       .expect(201)
       .expect((res) => {
@@ -62,8 +41,9 @@ describe('OrdersController (e2e)', () => {
   })
 
   it('POST /api/orders invalid items', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .post('/api/orders')
+      .set('Authorization', `Bearer ${token}`)
       .send({ clientId: 'client-1', items: [{ productId: '', quantity: 0, price: -1 }] })
       .expect(400)
       .expect((res) => {
@@ -72,8 +52,9 @@ describe('OrdersController (e2e)', () => {
   })
 
   it('POST /api/orders/:id/status', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .post('/api/orders/order-1/status')
+      .set('Authorization', `Bearer ${token}`)
       .send({ status: OrderStatus.InProgress })
       .expect(201)
       .expect((res) => {
@@ -82,8 +63,9 @@ describe('OrdersController (e2e)', () => {
   })
 
   it('POST /api/orders/:id/status invalid status', async () => {
-    await request(app.getHttpServer())
+    await request(app)
       .post('/api/orders/order-1/status')
+      .set('Authorization', `Bearer ${token}`)
       .send({ status: 'invalid' })
       .expect(400)
       .expect((res) => {

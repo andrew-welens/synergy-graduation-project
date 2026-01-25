@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import auditApi, { type AuditEntry } from '../api/audit'
-import { useAuth } from '../state/auth'
+import auditApi, { type AuditEntry } from '../services/audit'
+import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
+import { RetryPanel } from '../components/retry-panel'
 
 export default function AuditPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -14,6 +15,7 @@ export default function AuditPage() {
   const [page, setPage] = useState(1)
   const pageSize = 50
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const [reloadKey, setReloadKey] = useState(0)
 
   const canReadAudit = role === 'admin' || role === 'analyst'
 
@@ -43,7 +45,12 @@ export default function AuditPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, filters, page, pageSize])
+  }, [initialized, isAuthenticated, filters, page, pageSize, reloadKey])
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   return (
     <div className="card">
@@ -68,7 +75,7 @@ export default function AuditPage() {
           <div className="skeleton-card" />
         </div>
       )}
-      {error && <div className="form-error">{error}</div>}
+      {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (

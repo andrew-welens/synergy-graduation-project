@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { clientsApi } from '../api/clients'
-import { ordersApi } from '../api/orders'
-import { catalogApi } from '../api/catalog'
-import { reportsApi } from '../api/reports'
+import { clientsApi } from '../services/clients'
+import { ordersApi } from '../services/orders'
+import { catalogApi } from '../services/catalog'
+import { reportsApi } from '../services/reports'
 import * as XLSX from 'xlsx'
-import { useAuth } from '../state/auth'
-import { type Client, type Order, type OrderStatus } from '../api/types'
+import { useAuth } from '../utils/auth'
+import { type Client, type Order, type OrderStatus } from '../services/types'
 import { useMinLoading } from '../hooks/use-min-loading'
 
 export default function DashboardPage() {

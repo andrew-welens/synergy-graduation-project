@@ -5,5 +5,6 @@ module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  collectCoverageFrom: ['src/**/*.ts', '!src/main.ts', '!src/**/*.module.ts']
+  collectCoverageFrom: ['src/**/*.ts', '!src/main.ts', '!src/**/*.module.ts'],
+  setupFiles: ['reflect-metadata']
 }

@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useAuth } from '../state/auth'
-import { clientsApi } from '../api/clients'
-import { ordersApi } from '../api/orders'
-import { interactionsApi } from '../api/interactions'
-import { type Client, type Order, type Interaction, type Product, type OrderStatus } from '../api/types'
-import { catalogApi } from '../api/catalog'
+import { useAuth } from '../utils/auth'
+import { clientsApi } from '../services/clients'
+import { ordersApi } from '../services/orders'
+import { interactionsApi } from '../services/interactions'
+import { type Client, type Order, type Interaction, type Product, type OrderStatus } from '../services/types'
+import { catalogApi } from '../services/catalog'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
+import { RetryPanel } from '../components/retry-panel'
 
 export default function ClientDetailPage() {
   const { clientId } = useParams()
@@ -23,6 +24,8 @@ export default function ClientDetailPage() {
   const [ordersPageSize, setOrdersPageSize] = useState(20)
   const [ordersFilters, setOrdersFilters] = useState<{ status: OrderStatus | '', dateFrom: string, dateTo: string }>({ status: '', dateFrom: '', dateTo: '' })
   const ordersTotalPages = Math.max(1, Math.ceil(ordersTotal / ordersPageSize))
+  const [activeTab, setActiveTab] = useState<'data' | 'orders' | 'interactions'>('data')
+  const [reloadKey, setReloadKey] = useState(0)
 
   const orderStatuses: { value: OrderStatus, label: string }[] = [
     { value: 'new', label: 'Новый' },
@@ -36,6 +39,20 @@ export default function ClientDetailPage() {
   const canWriteInteractions = role === 'admin' || role === 'manager' || role === 'operator'
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(value)
+  const overdueDays = 7
+  const overdueThreshold = Date.now() - overdueDays * 24 * 60 * 60 * 1000
+  const criticalDays = 14
+  const criticalThreshold = Date.now() - criticalDays * 24 * 60 * 60 * 1000
+  const isOrderOverdue = (order: Order) => {
+    if (order.status === 'done' || order.status === 'canceled') return false
+    const createdAt = new Date(order.createdAt).getTime()
+    return Number.isFinite(createdAt) && createdAt < overdueThreshold
+  }
+  const isOrderCritical = (order: Order) => {
+    if (order.status === 'done' || order.status === 'canceled') return false
+    const createdAt = new Date(order.createdAt).getTime()
+    return Number.isFinite(createdAt) && createdAt < criticalThreshold
+  }
 
   useEffect(() => {
     if (!clientId || !initialized || !isAuthenticated) return
@@ -66,7 +83,12 @@ export default function ClientDetailPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [clientId, initialized, isAuthenticated, ordersPage, ordersPageSize, ordersFilters, canReadCatalog])
+  }, [clientId, initialized, isAuthenticated, ordersPage, ordersPageSize, ordersFilters, canReadCatalog, reloadKey])
+
+  const handleRetry = () => {
+    setError(null)
+    setReloadKey((prev) => prev + 1)
+  }
 
   if (!clientId) return <div className="page">Клиент не найден</div>
 
@@ -113,35 +135,53 @@ export default function ClientDetailPage() {
             {canWriteOrders && <Link className="btn" to={`/orders?clientId=${clientId}`}>Создать заказ</Link>}
           </div>
         </div>
-        {loading && (
-          <div className="skeleton">
-            <div className="skeleton-line" />
-            <div className="skeleton-line" />
-            <div className="skeleton-line" />
-          </div>
-        )}
-        {error && <div className="form-error">{error}</div>}
-        {client && (
-          <div className="grid" style={{ gap: 8 }}>
-            <div className="grid" style={{ gap: 4 }}>
-              <div><strong>{client.name}</strong></div>
-              <div>{client.email ?? '—'} · {client.phone ?? '—'}</div>
-              <div>{client.city ?? '—'} {client.address ?? ''}</div>
-              <div>{client.type === 'legal' ? 'Юрлицо' : 'Физлицо'} {client.inn ? `ИНН ${client.inn}` : ''}</div>
-            </div>
-            <div className="chips">
-              {(client.tags ?? []).length === 0 && <span className="text-muted">Теги не указаны</span>}
-              {client.tags?.map((tag) => (
-                <div key={tag} className="chip">
-                  <span>{tag}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="tabs">
+          <button className={`tab${activeTab === 'data' ? ' active' : ''}`} type="button" onClick={() => setActiveTab('data')}>
+            Данные
+          </button>
+          <button className={`tab${activeTab === 'orders' ? ' active' : ''}`} type="button" onClick={() => setActiveTab('orders')}>
+            Заказы
+          </button>
+          <button className={`tab${activeTab === 'interactions' ? ' active' : ''}`} type="button" onClick={() => setActiveTab('interactions')}>
+            Взаимодействия
+          </button>
+        </div>
       </div>
 
-      <div className="card">
+      {loading && (
+        <div className="skeleton">
+          <div className="skeleton-line" />
+          <div className="skeleton-line" />
+          <div className="skeleton-line" />
+        </div>
+      )}
+      {error && <RetryPanel message={error} onRetry={handleRetry} />}
+
+      {activeTab === 'data' && (
+        <div className="card">
+          {client && (
+            <div className="grid" style={{ gap: 8 }}>
+              <div className="grid" style={{ gap: 4 }}>
+                <div><strong>{client.name}</strong></div>
+                <div>{client.email ?? '—'} · {client.phone ?? '—'}</div>
+                <div>{client.city ?? '—'} {client.address ?? ''}</div>
+                <div>{client.type === 'legal' ? 'Юрлицо' : 'Физлицо'} {client.inn ? `ИНН ${client.inn}` : ''}</div>
+              </div>
+              <div className="chips">
+                {(client.tags ?? []).length === 0 && <span className="text-muted">Теги не указаны</span>}
+                {client.tags?.map((tag) => (
+                  <div key={tag} className="chip">
+                    <span>{tag}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'orders' && (
+        <div className="card">
         <div className="toolbar" style={{ marginBottom: 12 }}>
           <div className="toolbar-title">
             <h4>Заказы</h4>
@@ -194,10 +234,18 @@ export default function ClientDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((o) => (
-                    <tr key={o.id}>
+                  {orders.map((o) => {
+                    const isOverdue = isOrderOverdue(o)
+                    const isCritical = isOrderCritical(o)
+                    const rowClass = isCritical ? 'is-critical' : isOverdue ? 'is-overdue' : undefined
+                    return (
+                    <tr key={o.id} className={rowClass}>
                       <td><Link to={`/orders/${o.id}`}>{o.id}</Link></td>
-                      <td><span className={statusClass(o.status)}>{statusLabel(o.status)}</span></td>
+                      <td>
+                        <span className={statusClass(o.status)}>{statusLabel(o.status)}</span>
+                        {isOverdue && <span className="badge danger overdue-badge">Просрочен</span>}
+                        {isCritical && <span className="badge critical overdue-badge">Критичный</span>}
+                      </td>
                       <td className="text-right">{formatCurrency(o.totalAmount ?? o.total)}</td>
                       <td>
                         {o.items?.map((i, idx) => {
@@ -206,7 +254,7 @@ export default function ClientDetailPage() {
                         })}
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>
@@ -230,8 +278,10 @@ export default function ClientDetailPage() {
           </>
         )}
       </div>
+      )}
 
-      <div className="card">
+      {activeTab === 'interactions' && (
+        <div className="card">
         <div className="toolbar" style={{ marginBottom: 12 }}>
           <div className="toolbar-title">
             <h4>Взаимодействия</h4>
@@ -269,6 +319,7 @@ export default function ClientDetailPage() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }
