@@ -7,6 +7,11 @@ import { useMinLoading } from '../hooks/use-min-loading'
 import { ConfirmDialog } from '../components/confirm-dialog'
 import { RetryPanel } from '../components/retry-panel'
 import { useToast } from '../utils/toast'
+import { useDebounce } from '../hooks/use-debounce'
+import { SkeletonTable } from '../components/skeleton-table'
+import { Pagination } from '../components/pagination'
+import { EmptyState } from '../components/empty-state'
+import { Tooltip } from '../components/tooltip'
 
 export default function ClientsPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -21,7 +26,7 @@ export default function ClientsPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', city: '', address: '', tags: '', type: 'legal', inn: '' })
   const [onlyWithOrders, setOnlyWithOrders] = useState(false)
   const [searchInput, setSearchInput] = useState('')
-  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(searchInput.trim(), 300)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', city: '', address: '', tags: '', type: 'legal', inn: '' })
   const [typeFilter, setTypeFilter] = useState<'all' | 'legal' | 'individual'>('all')
@@ -181,8 +186,8 @@ export default function ClientsPage() {
 
   const filterChips = useMemo(() => {
     const chips: { key: string, label: string, onClear: () => void }[] = []
-    if (search.trim()) {
-      chips.push({ key: 'search', label: `Поиск: ${search}`, onClear: () => { setSearch(''); setSearchInput(''); setPage(1) } })
+    if (debouncedSearch) {
+      chips.push({ key: 'search', label: `Поиск: ${debouncedSearch}`, onClear: () => { setSearchInput(''); setPage(1) } })
     }
     if (onlyWithOrders) {
       chips.push({ key: 'orders', label: 'Только с заказами', onClear: () => { setOnlyWithOrders(false); setPage(1) } })
@@ -191,14 +196,13 @@ export default function ClientsPage() {
       chips.push({ key: 'type', label: typeFilter === 'legal' ? 'Юрлица' : 'Физлица', onClear: () => { setTypeFilter('all'); setPage(1) } })
     }
     return chips
-  }, [search, onlyWithOrders, typeFilter])
+  }, [debouncedSearch, onlyWithOrders, typeFilter])
 
   const hasActiveFilters = filterChips.length > 0
 
   const resetFilters = () => {
     setOnlyWithOrders(false)
     setTypeFilter('all')
-    setSearch('')
     setSearchInput('')
     setPage(1)
   }
@@ -209,23 +213,16 @@ export default function ClientsPage() {
   }
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setSearch(searchInput.trim())
-    }, 400)
-    return () => clearTimeout(handler)
-  }, [searchInput])
-
-  useEffect(() => {
     if (!initialized || !isAuthenticated) return
     startLoading()
-    clientsApi.list({ page, pageSize, hasOrders: onlyWithOrders, search, type: typeFilter === 'all' ? undefined : typeFilter, sortBy, sortDir })
+    clientsApi.list({ page, pageSize, hasOrders: onlyWithOrders, search: debouncedSearch, type: typeFilter === 'all' ? undefined : typeFilter, sortBy, sortDir })
       .then((res) => {
         setData(res.data)
         setTotal(res.total)
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, onlyWithOrders, search, typeFilter, page, pageSize, sortBy, sortDir, reloadKey])
+  }, [initialized, isAuthenticated, onlyWithOrders, debouncedSearch, typeFilter, page, pageSize, sortBy, sortDir, reloadKey])
 
   const handleRetry = () => {
     setError(null)
@@ -335,7 +332,7 @@ export default function ClientsPage() {
             style={{ width: 280 }}
           />
           {searchInput && (
-            <button className="btn secondary" type="button" onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }}>
+            <button className="btn secondary" type="button" onClick={() => { setSearchInput(''); setPage(1) }}>
               Очистить
             </button>
           )}
@@ -365,21 +362,22 @@ export default function ClientsPage() {
           ))}
         </div>
       )}
-      {loading && (
-        <div className="skeleton">
-          <div className="skeleton-card" />
-          <div className="skeleton-card" />
-        </div>
-      )}
+      {loading && <SkeletonTable rows={5} cols={7} />}
       {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (
-            <div className="empty-state">
-              <div>{hasActiveFilters ? 'Ничего не найдено' : 'Клиентов пока нет'}</div>
-              {hasActiveFilters && <button className="btn secondary" type="button" onClick={resetFilters}>Сбросить фильтры</button>}
-              {!hasActiveFilters && canWrite && <button className="btn secondary" type="button" onClick={openCreateForm}>Добавить клиента</button>}
-            </div>
+            <EmptyState
+              title={hasActiveFilters ? 'Ничего не найдено' : 'Клиентов пока нет'}
+              description={hasActiveFilters ? 'Попробуйте изменить параметры поиска или сбросить фильтры' : 'Начните работу, создав первого клиента'}
+              icon={hasActiveFilters ? 'search' : 'empty'}
+              action={
+                <>
+                  {hasActiveFilters && <button className="btn secondary" type="button" onClick={resetFilters}>Сбросить фильтры</button>}
+                  {!hasActiveFilters && canWrite && <button className="btn secondary" type="button" onClick={openCreateForm}>Добавить клиента</button>}
+                </>
+              }
+            />
           ) : (
             <>
               <div className="table-wrap">
@@ -406,9 +404,13 @@ export default function ClientsPage() {
                       <td className="text-right">{c.ordersCount ?? 0}</td>
                       <td>
                         <div className="actions-row">
-                          <Link to={`/clients/${c.id}`} className="btn secondary">Открыть</Link>
+                          <Tooltip content="Открыть карточку клиента">
+                            <Link to={`/clients/${c.id}`} className="btn secondary">Открыть</Link>
+                          </Tooltip>
                           <details className="menu">
-                            <summary className="btn secondary">⋯</summary>
+                            <Tooltip content="Дополнительные действия">
+                              <summary className="btn secondary">⋯</summary>
+                            </Tooltip>
                             <div className="menu-content">
                               <Link to={`/clients/${c.id}/interactions`} className="menu-item" onClick={closeMenu}>Взаимодействия</Link>
                               {canWrite && <Link to={`/orders?clientId=${c.id}`} className="menu-item" onClick={closeMenu}>Создать заказ</Link>}
@@ -424,21 +426,14 @@ export default function ClientsPage() {
                 </table>
               </div>
               {total > 0 && (
-                <div className="pagination">
-                  <span className="text-muted">
-                    {total === 0 ? '0' : `${(page - 1) * pageSize + 1}–${Math.min(total, page * pageSize)} из ${total}`}
-                  </span>
-                  <div className="actions-row">
-                    <button className="btn secondary" type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Назад</button>
-                    <span className="text-muted">{page} / {totalPages}</span>
-                    <button className="btn secondary" type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Вперед</button>
-                  </div>
-                  <select className="input" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}>
-                    <option value={10}>10 / стр</option>
-                    <option value={20}>20 / стр</option>
-                    <option value={50}>50 / стр</option>
-                  </select>
-                </div>
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                />
               )}
             </>
           )}

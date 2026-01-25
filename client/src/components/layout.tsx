@@ -1,7 +1,9 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../utils/auth'
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useMemo, useState, useRef } from 'react'
 import { ToastContainer } from './toast-container'
+import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts'
+import { GlobalSearch } from './global-search'
 
 export default function Layout() {
   const logout = useAuth((s) => s.logout)
@@ -13,7 +15,6 @@ export default function Layout() {
     navigate('/login')
   }
 
-  const [navSearch, setNavSearch] = useState('')
   const [isNavOpen, setIsNavOpen] = useState(false)
   const canReadCatalog = role === 'admin' || role === 'manager' || role === 'operator'
   const canReadReports = role === 'admin' || role === 'manager' || role === 'analyst'
@@ -24,17 +25,12 @@ export default function Layout() {
     { to: '/clients', label: 'Клиенты', match: (path: string) => path.startsWith('/clients') },
     { to: '/orders', label: 'Заказы', match: (path: string) => path.startsWith('/orders') },
     ...(canReadCatalog ? [{ to: '/catalog', label: 'Каталог', match: (path: string) => path.startsWith('/catalog') }] : []),
-    { to: '/profile', label: 'Профиль', match: (path: string) => path.startsWith('/profile') },
     ...(canReadReports ? [{ to: '/reports', label: 'Отчеты', match: (path: string) => path.startsWith('/reports') }] : []),
     ...(canReadAudit ? [{ to: '/audit', label: 'Аудит', match: (path: string) => path.startsWith('/audit') }] : []),
-    ...(canManageUsers ? [{ to: '/users', label: 'Пользователи', match: (path: string) => path.startsWith('/users') }] : [])
+    ...(canManageUsers ? [{ to: '/users', label: 'Пользователи', match: (path: string) => path.startsWith('/users') }] : []),
+    { to: '/profile', label: 'Профиль', match: (path: string) => path.startsWith('/profile') }
   ]
 
-  const filteredNav = useMemo(() => {
-    const value = navSearch.trim().toLowerCase()
-    if (!value) return nav
-    return nav.filter((item) => item.label.toLowerCase().includes(value))
-  }, [nav, navSearch])
 
   const pageMeta = useMemo(() => {
     const path = location.pathname
@@ -96,6 +92,17 @@ export default function Layout() {
     return { title: 'Раздел', subtitle: 'Рабочая область', breadcrumbs: [...base, { label: 'Раздел' }] }
   }, [location.pathname])
 
+  useKeyboardShortcuts([
+    {
+      key: 'Escape',
+      handler: () => {
+        if (isNavOpen) {
+          setIsNavOpen(false)
+        }
+      }
+    }
+  ])
+
   return (
     <div className={`app-shell${isNavOpen ? ' nav-open' : ''}`}>
       {isNavOpen && (
@@ -109,15 +116,10 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="sidebar-brand">Скартел CRM</div>
         <div className="sidebar-search">
-          <input
-            className="input"
-            placeholder="Поиск разделов"
-            value={navSearch}
-            onChange={(e) => setNavSearch(e.target.value)}
-          />
+          <GlobalSearch />
         </div>
         <nav className="sidebar-nav">
-          {filteredNav.map((item) => {
+          {nav.map((item) => {
             const active = item.match(location.pathname)
             return (
               <Link

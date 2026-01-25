@@ -4,6 +4,10 @@ import { type Category, type Product } from '../services/types'
 import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { RetryPanel } from '../components/retry-panel'
+import { useDebounce } from '../hooks/use-debounce'
+import { SkeletonTable } from '../components/skeleton-table'
+import { Pagination } from '../components/pagination'
+import { EmptyState } from '../components/empty-state'
 
 export default function CatalogPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -16,9 +20,11 @@ export default function CatalogPage() {
   const [catForm, setCatForm] = useState({ name: '', description: '' })
   const [prodForm, setProdForm] = useState({ name: '', categoryId: '', price: '', unit: 'шт' as 'шт' | 'усл.' | 'мес.', isAvailable: true, sku: '' })
   const [categorySearch, setCategorySearch] = useState('')
+  const debouncedCategorySearch = useDebounce(categorySearch, 300)
   const [categorySortBy, setCategorySortBy] = useState<'name' | 'createdAt'>('name')
   const [categorySortDir, setCategorySortDir] = useState<'asc' | 'desc'>('asc')
   const [productSearch, setProductSearch] = useState('')
+  const debouncedProductSearch = useDebounce(productSearch, 300)
   const [productSortBy, setProductSortBy] = useState<'name' | 'price'>('name')
   const [productSortDir, setProductSortDir] = useState<'asc' | 'desc'>('asc')
   const [productCategoryId, setProductCategoryId] = useState('')
@@ -84,11 +90,11 @@ export default function CatalogPage() {
     if (!canRead) return
     startLoading()
     Promise.all([
-      catalogApi.categories({ page: categoryPage, pageSize: categoriesPageSize, search: categorySearch || undefined }),
+      catalogApi.categories({ page: categoryPage, pageSize: categoriesPageSize, search: debouncedCategorySearch || undefined }),
       catalogApi.products({
         page: productPage,
         pageSize: productsPageSize,
-        search: productSearch || undefined,
+        search: debouncedProductSearch || undefined,
         categoryId: productCategoryId || undefined,
         isAvailable: productAvailability === 'all' ? undefined : productAvailability === 'available'
       })
@@ -101,7 +107,7 @@ export default function CatalogPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, canRead, categorySearch, productSearch, productCategoryId, productAvailability, categoryPage, productPage, categoriesPageSize, productsPageSize, reloadKey])
+  }, [initialized, isAuthenticated, canRead, debouncedCategorySearch, debouncedProductSearch, productCategoryId, productAvailability, categoryPage, productPage, categoriesPageSize, productsPageSize, reloadKey])
 
   const handleRetry = () => {
     setError(null)
@@ -288,12 +294,7 @@ export default function CatalogPage() {
             </span>
           </form>
         )}
-        {loading && (
-          <div className="skeleton">
-            <div className="skeleton-card" />
-            <div className="skeleton-card" />
-          </div>
-        )}
+        {loading && <SkeletonTable rows={5} cols={5} />}
         {error && <RetryPanel message={error} onRetry={handleRetry} />}
         {canWrite && editingCategoryId && (
           <form className="grid" style={{ gap: 8, gridTemplateColumns: '1fr 1fr auto', marginBottom: 12 }} onSubmit={handleUpdateCategory}>
@@ -310,10 +311,12 @@ export default function CatalogPage() {
         {!loading && !error && (
           <>
             {categories.length === 0 ? (
-              <div className="empty-state">
-                <div>Категорий пока нет</div>
-                {canWrite && <button className="btn secondary" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Добавить категорию</button>}
-              </div>
+              <EmptyState
+                title="Категорий пока нет"
+                description="Создайте первую категорию для организации товаров"
+                icon="empty"
+                action={canWrite && <button className="btn secondary" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Добавить категорию</button>}
+              />
             ) : (
               <>
                 <div className="table-wrap">
@@ -341,19 +344,13 @@ export default function CatalogPage() {
                   </table>
                 </div>
                 {categoriesTotalPages > 1 && (
-                  <div className="pagination">
-                    {categoryPage > 1 ? (
-                      <button className="btn secondary" type="button" onClick={() => setCategoryPage((p) => Math.max(1, p - 1))}>Назад</button>
-                    ) : (
-                      <span />
-                    )}
-                    <span style={{ color: '#64748b' }}>{categoryPage} / {categoriesTotalPages}</span>
-                    {categoryPage < categoriesTotalPages ? (
-                      <button className="btn secondary" type="button" onClick={() => setCategoryPage((p) => p + 1)}>Вперед</button>
-                    ) : (
-                      <span />
-                    )}
-                  </div>
+                  <Pagination
+                    page={categoryPage}
+                    totalPages={categoriesTotalPages}
+                    total={categoriesTotal}
+                    pageSize={categoriesPageSize}
+                    onPageChange={setCategoryPage}
+                  />
                 )}
               </>
             )}
@@ -407,12 +404,7 @@ export default function CatalogPage() {
             </span>
           </form>
         )}
-        {loading && (
-          <div className="skeleton">
-            <div className="skeleton-card" />
-            <div className="skeleton-card" />
-          </div>
-        )}
+        {loading && <SkeletonTable rows={5} cols={5} />}
         {error && <RetryPanel message={error} onRetry={handleRetry} />}
         {canWrite && editingProductId && (
           <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 12 }} onSubmit={handleUpdateProduct}>
@@ -443,10 +435,12 @@ export default function CatalogPage() {
         {!loading && !error && (
           <>
             {products.length === 0 ? (
-              <div className="empty-state">
-                <div>Товаров пока нет</div>
-                {canWrite && <button className="btn secondary" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Добавить товар</button>}
-              </div>
+              <EmptyState
+                title="Товаров пока нет"
+                description="Добавьте первый товар в каталог"
+                icon="empty"
+                action={canWrite && <button className="btn secondary" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Добавить товар</button>}
+              />
             ) : (
               <>
                 <div className="table-wrap">
@@ -478,19 +472,13 @@ export default function CatalogPage() {
                   </table>
                 </div>
                 {productsTotalPages > 1 && (
-                  <div className="pagination">
-                    {productPage > 1 ? (
-                      <button className="btn secondary" type="button" onClick={() => setProductPage((p) => Math.max(1, p - 1))}>Назад</button>
-                    ) : (
-                      <span />
-                    )}
-                    <span style={{ color: '#64748b' }}>{productPage} / {productsTotalPages}</span>
-                    {productPage < productsTotalPages ? (
-                      <button className="btn secondary" type="button" onClick={() => setProductPage((p) => p + 1)}>Вперед</button>
-                    ) : (
-                      <span />
-                    )}
-                  </div>
+                  <Pagination
+                    page={productPage}
+                    totalPages={productsTotalPages}
+                    total={productsTotal}
+                    pageSize={productsPageSize}
+                    onPageChange={setProductPage}
+                  />
                 )}
               </>
             )}

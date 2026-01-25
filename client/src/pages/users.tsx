@@ -5,6 +5,9 @@ import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { ConfirmDialog } from '../components/confirm-dialog'
 import { RetryPanel } from '../components/retry-panel'
+import { useCopyToClipboard } from '../utils/clipboard'
+import { SkeletonTable } from '../components/skeleton-table'
+import { EmptyState } from '../components/empty-state'
 
 export default function UsersPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -19,6 +22,7 @@ export default function UsersPage() {
 
   const canManageUsers = role === 'admin'
   const roles: Role[] = ['admin', 'manager', 'operator', 'analyst']
+  const copyToClipboard = useCopyToClipboard()
   const isCreateValid = form.email.trim().length > 0 && form.password.trim().length > 0
   const isEditValid = editForm.email.trim().length > 0
   const createDisabledReason = form.email.trim().length === 0
@@ -160,17 +164,16 @@ export default function UsersPage() {
           </div>
         </form>
       )}
-      {loading && (
-        <div className="skeleton">
-          <div className="skeleton-card" />
-          <div className="skeleton-card" />
-        </div>
-      )}
+      {loading && <SkeletonTable rows={5} cols={4} />}
       {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (
-            <div className="empty-state">Нет данных</div>
+            <EmptyState
+              title="Нет пользователей"
+              description="Создайте первого пользователя для начала работы"
+              icon="empty"
+            />
           ) : (
             <div className="table-wrap">
               <table className="table">
@@ -185,7 +188,17 @@ export default function UsersPage() {
                 <tbody>
                   {data.map((u) => (
                     <tr key={u.id}>
-                      <td>{u.email}</td>
+                      <td style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span>{u.email}</span>
+                        <button
+                          className="btn secondary"
+                          type="button"
+                          onClick={() => copyToClipboard(u.email, 'Email')}
+                          style={{ padding: '4px 8px', fontSize: 12 }}
+                        >
+                          Копировать
+                        </button>
+                      </td>
                       <td>{u.role}</td>
                       <td>{new Date(u.createdAt).toLocaleString()}</td>
                       <td>

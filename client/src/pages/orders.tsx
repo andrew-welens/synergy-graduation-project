@@ -10,6 +10,9 @@ import { AppDateRangePicker } from '../components/date-range-picker'
 import { useToast } from '../utils/toast'
 import { usersApi } from '../services/users'
 import { RetryPanel } from '../components/retry-panel'
+import { SkeletonTable } from '../components/skeleton-table'
+import { Pagination } from '../components/pagination'
+import { EmptyState } from '../components/empty-state'
 
 export default function OrdersPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -249,21 +252,22 @@ export default function OrdersPage() {
           ))}
         </div>
       )}
-      {loading && (
-        <div className="skeleton">
-          <div className="skeleton-card" />
-          <div className="skeleton-card" />
-        </div>
-      )}
+      {loading && <SkeletonTable rows={5} cols={7} />}
       {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (
-            <div className="empty-state">
-              <div>{hasActiveFilters ? 'Ничего не найдено' : 'Заказов пока нет'}</div>
-              {hasActiveFilters && <button className="btn secondary" type="button" onClick={resetFilters}>Сбросить фильтры</button>}
-              {!hasActiveFilters && canWrite && <button className="btn secondary" type="button" onClick={openCreateForm}>Создать заказ</button>}
-            </div>
+            <EmptyState
+              title={hasActiveFilters ? 'Ничего не найдено' : 'Заказов пока нет'}
+              description={hasActiveFilters ? 'Попробуйте изменить параметры фильтрации' : 'Создайте первый заказ для начала работы'}
+              icon={hasActiveFilters ? 'search' : 'empty'}
+              action={
+                <>
+                  {hasActiveFilters && <button className="btn secondary" type="button" onClick={resetFilters}>Сбросить фильтры</button>}
+                  {!hasActiveFilters && canWrite && <button className="btn secondary" type="button" onClick={openCreateForm}>Создать заказ</button>}
+                </>
+              }
+            />
           ) : (
             <>
               <div className="table-wrap">
@@ -310,21 +314,14 @@ export default function OrdersPage() {
                 </table>
               </div>
               {total > 0 && (
-                <div className="pagination">
-                  <span className="text-muted">
-                    {total === 0 ? '0' : `${(page - 1) * pageSize + 1}–${Math.min(total, page * pageSize)} из ${total}`}
-                  </span>
-                  <div className="actions-row">
-                    <button className="btn secondary" type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Назад</button>
-                    <span className="text-muted">{page} / {totalPages}</span>
-                    <button className="btn secondary" type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Вперед</button>
-                  </div>
-                  <select className="input" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}>
-                    <option value={10}>10 / стр</option>
-                    <option value={20}>20 / стр</option>
-                    <option value={50}>50 / стр</option>
-                  </select>
-                </div>
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                />
               )}
             </>
           )}

@@ -10,6 +10,8 @@ import { useToast } from '../utils/toast'
 import { ConfirmDialog } from '../components/confirm-dialog'
 import { auditApi, type AuditEntry } from '../services/audit'
 import { RetryPanel } from '../components/retry-panel'
+import { useCopyToClipboard } from '../utils/clipboard'
+import { SkeletonCard } from '../components/skeleton-card'
 
 export default function OrderDetailPage() {
   const { orderId } = useParams()
@@ -31,6 +33,7 @@ export default function OrderDetailPage() {
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([])
   const [reloadKey, setReloadKey] = useState(0)
   const addToast = useToast((state) => state.add)
+  const copyToClipboard = useCopyToClipboard()
 
   const orderStatuses: { value: OrderStatus, label: string }[] = [
     { value: 'new', label: 'Новый' },
@@ -238,17 +241,23 @@ export default function OrderDetailPage() {
             {client && <Link className="btn secondary" to={`/clients/${client.id}`}>Клиент</Link>}
           </div>
         </div>
-        {loading && (
-          <div className="skeleton">
-            <div className="skeleton-line" />
-            <div className="skeleton-line" />
-            <div className="skeleton-line" />
-          </div>
-        )}
+        {loading && <SkeletonCard lines={3} />}
         {error && <RetryPanel message={error} onRetry={handleRetry} />}
         {order && (
           <div className="grid" style={{ gap: 10 }}>
             <div className="grid" style={{ gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <strong>ID заказа:</strong>
+                <span>{orderId}</span>
+                <button
+                  className="btn secondary"
+                  type="button"
+                  onClick={() => copyToClipboard(orderId, 'ID заказа')}
+                  style={{ padding: '4px 8px', fontSize: 12 }}
+                >
+                  Копировать
+                </button>
+              </div>
               <div><strong>Клиент:</strong> {client ? <Link to={`/clients/${client.id}`}>{client.name}</Link> : order.clientId}</div>
               <div><strong>Статус:</strong> <span className={statusClass(order.status)}>{statusLabel(order.status)}</span></div>
               <div><strong>Сумма:</strong> {formatCurrency(order.totalAmount ?? order.total)}</div>

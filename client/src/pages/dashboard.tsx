@@ -113,25 +113,25 @@ export default function DashboardPage() {
         {loading && <div>Загрузка...</div>}
         {error && <div style={{ color: '#f87171' }}>{error}</div>}
         {!loading && !error && (
-          <div className="grid" style={{ gap: 12, gridTemplateColumns: canReadCatalog ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', marginTop: 16 }}>
-            <div className="card stat-card">
+          <div className="grid" style={{ gap: 16, gridTemplateColumns: canReadCatalog ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', marginTop: 20 }}>
+            <div className="stat-card">
               <div className="stat-label">Клиенты</div>
               <div className="stat-value">{counts.clients}</div>
               <div className="stat-meta">+8.2% за месяц</div>
             </div>
-            <div className="card stat-card">
+            <div className="stat-card">
               <div className="stat-label">Заказы</div>
               <div className="stat-value">{counts.orders}</div>
               <div className="stat-meta">+5.4% за месяц</div>
             </div>
             {canReadCatalog && (
-              <div className="card stat-card">
+              <div className="stat-card">
                 <div className="stat-label">Товары</div>
                 <div className="stat-value">{counts.products}</div>
                 <div className="stat-meta">+2.1% за месяц</div>
               </div>
             )}
-            <div className="card stat-card">
+            <div className="stat-card">
               <div className="stat-label">Новые заявки</div>
               <div className="stat-value">{Math.round(counts.orders * 0.18)}</div>
               <div className="stat-meta">+12.6% за месяц</div>
@@ -160,20 +160,20 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="grid" style={{ gap: 12 }}>
-          <div className="card">
+          <div className="stat-card">
             <div className="stat-label">Доход</div>
             <div className="stat-value">{formatCurrency(Math.round(counts.orders * 1480))}</div>
-            <div className="stat-meta">Средний чек {formatCurrency(1480)}</div>
+            <div className="stat-meta" style={{ color: '#7c94c9' }}>Средний чек {formatCurrency(1480)}</div>
           </div>
-          <div className="card">
+          <div className="stat-card">
             <div className="stat-label">Просроченные</div>
-            <div className="stat-value">{Math.max(0, Math.round(counts.orders * 0.04))}</div>
-            <div className="stat-meta">Контроль SLA</div>
+            <div className="stat-value" style={{ color: counts.orders * 0.04 > 0 ? '#f87171' : '#f8fafc' }}>{Math.max(0, Math.round(counts.orders * 0.04))}</div>
+            <div className="stat-meta" style={{ color: '#7c94c9' }}>Контроль SLA</div>
           </div>
-          <div className="card">
+          <div className="stat-card">
             <div className="stat-label">Активные менеджеры</div>
             <div className="stat-value">{Math.max(3, Math.round(counts.clients / 10))}</div>
-            <div className="stat-meta">Распределение нагрузки</div>
+            <div className="stat-meta" style={{ color: '#7c94c9' }}>Распределение нагрузки</div>
           </div>
         </div>
       </div>

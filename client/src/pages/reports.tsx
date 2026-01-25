@@ -212,9 +212,11 @@ export default function ReportsPage() {
     setReloadKey((prev) => prev + 1)
   }
 
-  const totalPages = Math.max(1, Math.ceil((data?.data.length ?? 0) / pageSize))
+  const filteredData = data?.data.filter((row) => row.count > 0) ?? []
+  
+  const totalPages = Math.max(1, Math.ceil((filteredData.length ?? 0) / pageSize))
   const overdueTotalPages = Math.max(1, Math.ceil((overdue?.total ?? 0) / overduePageSize))
-  const pagedData = data?.data.slice((page - 1) * pageSize, page * pageSize) ?? []
+  const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize)
 
   return (
     <div className="grid" style={{ gap: 16 }}>
@@ -268,7 +270,7 @@ export default function ReportsPage() {
                   <tbody>
                     {pagedData.map((row) => (
                       <tr key={row.key}>
-                        <td>{row.key}</td>
+                        <td>{data?.groupBy === 'status' ? statusLabel(row.key as OrderStatus) : row.key}</td>
                         <td>{row.count}</td>
                         <td>{row.total}</td>
                       </tr>

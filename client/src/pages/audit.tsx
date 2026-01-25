@@ -4,6 +4,9 @@ import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
 import { RetryPanel } from '../components/retry-panel'
+import { SkeletonTable } from '../components/skeleton-table'
+import { Pagination } from '../components/pagination'
+import { EmptyState } from '../components/empty-state'
 
 export default function AuditPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -69,17 +72,16 @@ export default function AuditPage() {
           placeholder="Период"
         />
       </div>
-      {loading && (
-        <div className="skeleton">
-          <div className="skeleton-card" />
-          <div className="skeleton-card" />
-        </div>
-      )}
+      {loading && <SkeletonTable rows={5} cols={5} />}
       {error && <RetryPanel message={error} onRetry={handleRetry} />}
       {!loading && !error && (
         <>
           {data.length === 0 ? (
-            <div className="empty-state">Нет данных</div>
+            <EmptyState
+              title="Нет данных"
+              description="Записи аудита появятся здесь после выполнения действий в системе"
+              icon="no-data"
+            />
           ) : (
             <>
               <div className="table-wrap">
@@ -107,19 +109,13 @@ export default function AuditPage() {
                 </table>
               </div>
               {totalPages > 1 && (
-                <div className="pagination">
-                  {page > 1 ? (
-                    <button className="btn secondary" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))}>Назад</button>
-                  ) : (
-                    <span />
-                  )}
-                  <span style={{ color: '#64748b' }}>{page} / {totalPages}</span>
-                  {page < totalPages ? (
-                    <button className="btn secondary" type="button" onClick={() => setPage((p) => p + 1)}>Вперед</button>
-                  ) : (
-                    <span />
-                  )}
-                </div>
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                />
               )}
             </>
           )}

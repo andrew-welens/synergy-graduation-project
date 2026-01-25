@@ -9,6 +9,9 @@ import { catalogApi } from '../services/catalog'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
 import { RetryPanel } from '../components/retry-panel'
+import { useCopyToClipboard } from '../utils/clipboard'
+import { SkeletonCard } from '../components/skeleton-card'
+import { Pagination } from '../components/pagination'
 
 export default function ClientDetailPage() {
   const { clientId } = useParams()
@@ -37,6 +40,7 @@ export default function ClientDetailPage() {
   const canReadCatalog = role === 'admin' || role === 'manager' || role === 'operator'
   const canWriteOrders = role === 'admin' || role === 'manager' || role === 'operator'
   const canWriteInteractions = role === 'admin' || role === 'manager' || role === 'operator'
+  const copyToClipboard = useCopyToClipboard()
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(value)
   const overdueDays = 7
@@ -123,11 +127,13 @@ export default function ClientDetailPage() {
 
   return (
     <div className="page grid" style={{ gap: 16 }}>
+      {loading && <SkeletonCard lines={3} />}
+      {error && <RetryPanel message={error} onRetry={handleRetry} />}
+
       <div className="card">
-        <div className="toolbar" style={{ marginBottom: 12 }}>
+        <div className="toolbar" style={{ marginBottom: 16 }}>
           <div className="toolbar-title">
-            <h3>Клиент</h3>
-            <span className="toolbar-meta">{client?.name ?? clientId}</span>
+            <h3>{client?.name ?? clientId}</h3>
           </div>
           <div className="toolbar-actions">
             <Link className="btn secondary" to="/clients">К списку</Link>
@@ -135,7 +141,7 @@ export default function ClientDetailPage() {
             {canWriteOrders && <Link className="btn" to={`/orders?clientId=${clientId}`}>Создать заказ</Link>}
           </div>
         </div>
-        <div className="tabs">
+        <div className="tabs" style={{ marginBottom: 20 }}>
           <button className={`tab${activeTab === 'data' ? ' active' : ''}`} type="button" onClick={() => setActiveTab('data')}>
             Данные
           </button>
@@ -146,52 +152,139 @@ export default function ClientDetailPage() {
             Взаимодействия
           </button>
         </div>
-      </div>
 
-      {loading && (
-        <div className="skeleton">
-          <div className="skeleton-line" />
-          <div className="skeleton-line" />
-          <div className="skeleton-line" />
-        </div>
-      )}
-      {error && <RetryPanel message={error} onRetry={handleRetry} />}
-
-      {activeTab === 'data' && (
-        <div className="card">
-          {client && (
-            <div className="grid" style={{ gap: 8 }}>
-              <div className="grid" style={{ gap: 4 }}>
-                <div><strong>{client.name}</strong></div>
-                <div>{client.email ?? '—'} · {client.phone ?? '—'}</div>
-                <div>{client.city ?? '—'} {client.address ?? ''}</div>
-                <div>{client.type === 'legal' ? 'Юрлицо' : 'Физлицо'} {client.inn ? `ИНН ${client.inn}` : ''}</div>
-              </div>
-              <div className="chips">
-                {(client.tags ?? []).length === 0 && <span className="text-muted">Теги не указаны</span>}
-                {client.tags?.map((tag) => (
-                  <div key={tag} className="chip">
-                    <span>{tag}</span>
+        {activeTab === 'data' && client && (
+          <div className="grid" style={{ gap: 20 }}>
+            <div>
+              <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Основная информация</h4>
+                <div className="grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Полное имя</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <strong style={{ fontSize: 16 }}>{client.name}</strong>
+                      <button
+                        className="btn secondary"
+                        type="button"
+                        onClick={() => copyToClipboard(client.name, 'Имя клиента')}
+                        style={{ padding: '4px 8px', fontSize: 12 }}
+                      >
+                        Копировать
+                      </button>
+                    </div>
                   </div>
-                ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Тип клиента</div>
+                    <div>
+                      <span className="badge">{client.type === 'legal' ? 'Юридическое лицо' : 'Физическое лицо'}</span>
+                    </div>
+                  </div>
+                  {client.inn && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>ИНН</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span>{client.inn}</span>
+                        <button
+                          className="btn secondary"
+                          type="button"
+                          onClick={() => copyToClipboard(client.inn!, 'ИНН')}
+                          style={{ padding: '4px 8px', fontSize: 12 }}
+                        >
+                          Копировать
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Контактная информация</h4>
+                <div className="grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                  {client.email && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Email</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <a href={`mailto:${client.email}`} style={{ color: '#cbd5f5', textDecoration: 'none' }}>{client.email}</a>
+                        <button
+                          className="btn secondary"
+                          type="button"
+                          onClick={() => copyToClipboard(client.email!, 'Email')}
+                          style={{ padding: '4px 8px', fontSize: 12 }}
+                        >
+                          Копировать
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {client.phone && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Телефон</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <a href={`tel:${client.phone}`} style={{ color: '#cbd5f5', textDecoration: 'none' }}>{client.phone}</a>
+                        <button
+                          className="btn secondary"
+                          type="button"
+                          onClick={() => copyToClipboard(client.phone!, 'Телефон')}
+                          style={{ padding: '4px 8px', fontSize: 12 }}
+                        >
+                          Копировать
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {(client.city || client.address) && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Адрес</div>
+                      <div>
+                        {client.city && <span>{client.city}</span>}
+                        {client.city && client.address && <span>, </span>}
+                        {client.address && <span>{client.address}</span>}
+                        {!client.city && !client.address && <span className="text-muted">Не указан</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Теги и метки</h4>
+                <div className="chips">
+                  {(client.tags ?? []).length === 0 ? (
+                    <span className="text-muted">Теги не указаны</span>
+                  ) : (
+                    client.tags?.map((tag) => (
+                      <div key={tag} className="chip">
+                        <span>{tag}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Статистика</h4>
+                <div className="grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: 'rgba(148, 163, 184, 0.08)', borderRadius: 12 }}>
+                    <div className="text-muted" style={{ fontSize: 12 }}>Всего заказов</div>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#f8fafc' }}>{client.ordersCount ?? 0}</div>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
+        )}
 
-      {activeTab === 'orders' && (
-        <div className="card">
-        <div className="toolbar" style={{ marginBottom: 12 }}>
-          <div className="toolbar-title">
-            <h4>Заказы</h4>
-            <span className="toolbar-meta">{ordersTotal}</span>
-          </div>
-          <div className="toolbar-actions">
-            {hasOrderFilters && <button className="btn secondary" type="button" onClick={resetOrderFilters}>Сбросить фильтры</button>}
-          </div>
-        </div>
-        <div className="filters-row" style={{ marginBottom: 8 }}>
+        {activeTab === 'orders' && (
+          <>
+            <div className="toolbar" style={{ marginBottom: 12 }}>
+              <div className="toolbar-title">
+                <h4>Заказы</h4>
+                <span className="toolbar-meta">{ordersTotal}</span>
+              </div>
+              <div className="toolbar-actions">
+                {hasOrderFilters && <button className="btn secondary" type="button" onClick={resetOrderFilters}>Сбросить фильтры</button>}
+              </div>
+            </div>
+            <div className="filters-row" style={{ marginBottom: 8 }}>
           <select className="input" value={ordersFilters.status} onChange={(e) => { setOrdersFilters((f) => ({ ...f, status: e.target.value as OrderStatus | '' })); setOrdersPage(1) }}>
             <option value="">Статус</option>
             {orderStatuses.map((s) => (
@@ -259,39 +352,32 @@ export default function ClientDetailPage() {
               </table>
             </div>
             {ordersTotal > 0 && (
-              <div className="pagination">
-                <span className="text-muted">
-                  {ordersTotal === 0 ? '0' : `${(ordersPage - 1) * ordersPageSize + 1}–${Math.min(ordersTotal, ordersPage * ordersPageSize)} из ${ordersTotal}`}
-                </span>
-                <div className="actions-row">
-                  <button className="btn secondary" type="button" disabled={ordersPage <= 1} onClick={() => setOrdersPage((p) => Math.max(1, p - 1))}>Назад</button>
-                  <span className="text-muted">{ordersPage} / {ordersTotalPages}</span>
-                  <button className="btn secondary" type="button" disabled={ordersPage >= ordersTotalPages} onClick={() => setOrdersPage((p) => p + 1)}>Вперед</button>
-                </div>
-                <select className="input" value={ordersPageSize} onChange={(e) => { setOrdersPageSize(Number(e.target.value)); setOrdersPage(1) }}>
-                  <option value={10}>10 / стр</option>
-                  <option value={20}>20 / стр</option>
-                  <option value={50}>50 / стр</option>
-                </select>
-              </div>
+              <Pagination
+                page={ordersPage}
+                totalPages={ordersTotalPages}
+                total={ordersTotal}
+                pageSize={ordersPageSize}
+                onPageChange={setOrdersPage}
+                onPageSizeChange={setOrdersPageSize}
+              />
             )}
           </>
         )}
-      </div>
-      )}
+          </>
+        )}
 
-      {activeTab === 'interactions' && (
-        <div className="card">
-        <div className="toolbar" style={{ marginBottom: 12 }}>
-          <div className="toolbar-title">
-            <h4>Взаимодействия</h4>
-            <span className="toolbar-meta">{interactions.length}</span>
-          </div>
-          <div className="toolbar-actions">
-            {canWriteInteractions && <Link className="btn secondary" to={`/clients/${clientId}/interactions`}>Добавить</Link>}
-          </div>
-        </div>
-        {interactions.length === 0 ? (
+        {activeTab === 'interactions' && (
+          <>
+            <div className="toolbar" style={{ marginBottom: 12 }}>
+              <div className="toolbar-title">
+                <h4>Взаимодействия</h4>
+                <span className="toolbar-meta">{interactions.length}</span>
+              </div>
+              <div className="toolbar-actions">
+                {canWriteInteractions && <Link className="btn secondary" to={`/clients/${clientId}/interactions`}>Добавить</Link>}
+              </div>
+            </div>
+            {interactions.length === 0 ? (
           <div className="empty-state">
             <div>Нет взаимодействий</div>
             {canWriteInteractions && <Link className="btn secondary" to={`/clients/${clientId}/interactions`}>Добавить взаимодействие</Link>}
@@ -318,8 +404,9 @@ export default function ClientDetailPage() {
             </table>
           </div>
         )}
+          </>
+        )}
       </div>
-      )}
     </div>
   )
 }
