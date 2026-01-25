@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  managedOrders Order[] @relation("OrderManager")
+}
+
+model Client {
+  id          String   @id @default(uuid())
+  name        String
+  email       String?  @unique
+  phone       String?  @unique
+  city        String?
+  address     String?
+  managerId   String?
+  tags        String   @default("[]")
+  type        String   @default("legal")
+  inn         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
+  interactions Interaction[]
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products  Product[]
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  categoryId  String
+  price       Float
+  unit        String   @default("шт")
+  isAvailable Boolean
+  sku         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  category    Category @relation(fields: [categoryId], references: [id])
+  items       OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  clientId    String
+  total       Float
+  status      String
+  comments    String?
+  managerId   String?
+  manager     User?       @relation("OrderManager", fields: [managerId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  completedAt DateTime?
+  client      Client      @relation(fields: [clientId], references: [id])
+  items       OrderItem[]
+  history     OrderStatusHistory[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Interaction {
+  id          String   @id @default(uuid())
+  clientId    String
+  channel     String
+  description String
+  managerId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  client      Client   @relation(fields: [clientId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String?
+  createdAt  DateTime @default(now())
+  metadata   Json?
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(uuid())
+  orderId   String
+  status    String
+  actorId   String?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+}
