@@ -3,7 +3,9 @@ export type Role = 'admin' | 'manager' | 'operator' | 'analyst'
 export interface User {
   id: string
   email: string
-  name?: string
+  firstName?: string
+  lastName?: string
+  isActive: boolean
   role: Role
   createdAt: string
   updatedAt: string
@@ -11,7 +13,23 @@ export interface User {
 
 export interface AuthTokens {
   accessToken: string
-  refreshToken?: string
+  refreshToken: string
+  user: {
+    id: string
+    email: string
+    role: Role
+    permissions: string[]
+  }
+}
+
+export interface RefreshResponse {
+  accessToken: string
+  user: {
+    id: string
+    email: string
+    role: Role
+    permissions: string[]
+  }
 }
 
 export interface Paginated<T> {
@@ -61,6 +79,7 @@ export interface OrderItem {
   productId: string
   quantity: number
   price: number
+  total: number
 }
 
 export interface Order {
@@ -94,7 +113,8 @@ export interface Interaction {
 export interface OrderStatusHistory {
   id: string
   orderId: string
-  status: OrderStatus
-  actorId?: string
+  fromStatus?: OrderStatus
+  toStatus: OrderStatus
+  changedByUserId?: string
   createdAt: string
 }

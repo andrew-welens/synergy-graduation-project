@@ -1,7 +1,7 @@
 export class AuditLogResponseDto {
   id!: string
 
-  actorId!: string
+  userId!: string
 
   action!: string
 

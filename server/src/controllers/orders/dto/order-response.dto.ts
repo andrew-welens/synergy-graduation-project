@@ -6,14 +6,18 @@ export class OrderItemResponseDto {
   quantity!: number
 
   price!: number
+
+  total!: number
 }
 
 export class OrderStatusHistoryResponseDto {
   id!: string
 
-  status!: OrderStatus
+  fromStatus?: OrderStatus
 
-  actorId?: string
+  toStatus!: OrderStatus
+
+  changedByUserId?: string
 
   createdAt!: string
 }

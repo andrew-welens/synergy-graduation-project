@@ -30,9 +30,11 @@ export class UsersService {
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
-        name: dto.name?.trim(),
+        firstName: dto.firstName?.trim(),
+        lastName: dto.lastName?.trim(),
         passwordHash: bcrypt.hashSync(dto.password, 10),
-        role: dto.role as Role
+        role: dto.role as Role,
+        isActive: true
       }
     })
     await this.auditService.record(actorId, 'user.created', 'user', user.id)
@@ -52,9 +54,11 @@ export class UsersService {
       where: { id },
       data: {
         email: dto.email ?? user.email,
-        name: dto.name?.trim() ?? user.name,
+        firstName: dto.firstName !== undefined ? dto.firstName?.trim() : (user as any).firstName,
+        lastName: dto.lastName !== undefined ? dto.lastName?.trim() : (user as any).lastName,
         passwordHash: dto.password ? bcrypt.hashSync(dto.password, 10) : user.passwordHash,
-        role: dto.role ?? user.role
+        role: dto.role ?? user.role,
+        isActive: dto.isActive !== undefined ? dto.isActive : (user as any).isActive ?? true
       }
     })
     await this.auditService.record(actorId, 'user.updated', 'user', id)

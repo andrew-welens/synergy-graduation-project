@@ -39,3 +39,6 @@ yarn-error.log*
 # IDE/editor
 .idea/
 .vscode/
+
+# Prisma migrations
+server/prisma/migrations/

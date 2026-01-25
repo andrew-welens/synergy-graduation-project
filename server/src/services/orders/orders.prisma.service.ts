@@ -28,14 +28,14 @@ export class OrdersPrismaService {
         orderBy: this.buildOrderBy(query.sortBy, query.sortDir),
         skip: (page - 1) * pageSize,
         take: pageSize,
-        include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { name: true, email: true } } }
+        include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
       })
     ])
     return { data: rows.map((row) => this.mapOrder(row)) as unknown as Order[], total }
   }
 
   async findOne(id: string): Promise<Order> {
-    const order = await this.prisma.order.findUnique({ where: { id }, include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { name: true, email: true } } } })
+    const order = await this.prisma.order.findUnique({ where: { id }, include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } } })
     if (!order) {
       throw new ApiError(404, 'NOT_FOUND', 'Not Found')
     }
@@ -59,18 +59,19 @@ export class OrdersPrismaService {
         total,
         completedAt: status === OrderStatus.Done || status === OrderStatus.Canceled ? new Date() : undefined,
         items: {
-          create: items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity }))
+          create: items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity, total: i.total }))
         },
         history: {
           create: [
             {
-              status,
-              actorId
+              fromStatus: null,
+              toStatus: status,
+              changedByUserId: actorId
             }
           ]
         }
       },
-      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { name: true, email: true } } }
+      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
     })
     return this.mapOrder(order) as unknown as Order
   }
@@ -86,13 +87,14 @@ export class OrdersPrismaService {
         history: {
           create: [
             {
-              status: dto.status,
-              actorId
+              fromStatus: order.status,
+              toStatus: dto.status,
+              changedByUserId: actorId
             }
           ]
         }
       },
-      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { name: true, email: true } } }
+      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
     })
     return this.mapOrder(updated) as unknown as Order
   }
@@ -114,12 +116,12 @@ export class OrdersPrismaService {
             total,
             items: {
               deleteMany: {},
-              create: items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity }))
+              create: items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity, total: i.total }))
             }
           }
           : {})
       },
-      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { name: true, email: true } } }
+      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
     })
     return this.mapOrder(updated) as unknown as Order
   }
@@ -145,7 +147,7 @@ export class OrdersPrismaService {
       if (i.price < 0) {
         throw new ApiError(400, 'VALIDATION_ERROR', 'Цена не может быть отрицательной')
       }
-      return { productId: i.productId, quantity: i.quantity, price: i.price }
+      return { productId: i.productId, quantity: i.quantity, price: i.price, total: i.quantity * i.price }
     })
   }
 
@@ -200,13 +202,16 @@ export class OrdersPrismaService {
     return { createdAt: direction }
   }
 
-  private mapOrder(order: { total: number, client?: { name: string } | null, manager?: { name: string | null, email: string } | null }) {
-    const { client, manager, ...rest } = order as { total: number, client?: { name: string } | null, manager?: { name: string | null, email: string } | null, [key: string]: unknown }
+  private mapOrder(order: { total: number, client?: { name: string } | null, manager?: { firstName: string | null, lastName: string | null, email: string } | null }) {
+    const { client, manager, ...rest } = order as { total: number, client?: { name: string } | null, manager?: { firstName: string | null, lastName: string | null, email: string } | null, [key: string]: unknown }
+    const managerName = manager?.firstName || manager?.lastName 
+      ? [manager.firstName, manager.lastName].filter(Boolean).join(' ').trim() || undefined
+      : undefined
     return {
       ...rest,
       totalAmount: order.total,
       clientName: client?.name,
-      managerName: manager?.name ?? undefined,
+      managerName,
       managerEmail: manager?.email
     }
   }

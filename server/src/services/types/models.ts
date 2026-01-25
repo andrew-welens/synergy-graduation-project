@@ -66,9 +66,11 @@ export const rolePermissions: Record<Role, Permission[]> = {
 export interface User {
   id: string
   email: string
-  name?: string
+  firstName?: string
+  lastName?: string
   passwordHash: string
   role: Role
+  isActive: boolean
   createdAt: string
   updatedAt: string
 }
@@ -120,6 +122,7 @@ export interface OrderItem {
   productId: string
   quantity: number
   price: number
+  total: number
 }
 
 export interface Order {
@@ -150,7 +153,7 @@ export interface Interaction {
 
 export interface AuditLog {
   id: string
-  actorId: string
+  userId: string
   action: string
   entityType: string
   entityId?: string
@@ -161,7 +164,8 @@ export interface AuditLog {
 export interface OrderStatusHistory {
   id: string
   orderId: string
-  status: OrderStatus
-  actorId?: string
+  fromStatus?: OrderStatus
+  toStatus: OrderStatus
+  changedByUserId?: string
   createdAt: Date
 }

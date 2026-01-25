@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator'
+import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator'
 import { type Role } from '../../../services/types/models'
 
 export class UpdateUserDto {
@@ -8,8 +8,17 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(2)
-  name?: string
+  @MinLength(1)
+  firstName?: string
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  lastName?: string
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean
 
   @IsOptional()
   @IsString()

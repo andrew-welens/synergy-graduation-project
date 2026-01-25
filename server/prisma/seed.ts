@@ -18,30 +18,34 @@ async function main() {
   const adminEmail = 'admin@example.com'
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { name: 'Администратор Системы', role: 'admin' },
+    update: { firstName: 'Администратор', lastName: 'Системы', role: 'admin' },
     create: {
       email: adminEmail,
-      name: 'Администратор Системы',
+      firstName: 'Администратор',
+      lastName: 'Системы',
       passwordHash: bcrypt.hashSync('password', 10),
-      role: 'admin'
+      role: 'admin',
+      isActive: true
     }
   })
   const staffUsers = [
-    { email: 'manager1@example.com', role: 'manager', name: 'Петров Илья Сергеевич' },
-    { email: 'manager2@example.com', role: 'manager', name: 'Смирнова Анна Викторовна' },
-    { email: 'manager3@example.com', role: 'manager', name: 'Ковалев Артем Николаевич' },
-    { email: 'operator1@example.com', role: 'operator', name: 'Лебедева Мария Андреевна' },
-    { email: 'operator2@example.com', role: 'operator', name: 'Никифоров Павел Олегович' }
+    { email: 'manager1@example.com', role: 'manager', firstName: 'Илья', lastName: 'Петров' },
+    { email: 'manager2@example.com', role: 'manager', firstName: 'Анна', lastName: 'Смирнова' },
+    { email: 'manager3@example.com', role: 'manager', firstName: 'Артем', lastName: 'Ковалев' },
+    { email: 'operator1@example.com', role: 'operator', firstName: 'Мария', lastName: 'Лебедева' },
+    { email: 'operator2@example.com', role: 'operator', firstName: 'Павел', lastName: 'Никифоров' }
   ]
   for (const user of staffUsers) {
     await prisma.user.upsert({
       where: { email: user.email },
-      update: { name: user.name, role: user.role },
+      update: { firstName: user.firstName, lastName: user.lastName, role: user.role },
       create: {
         email: user.email,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         passwordHash: bcrypt.hashSync('password', 10),
-        role: user.role
+        role: user.role,
+        isActive: true
       }
     })
   }
@@ -345,10 +349,10 @@ async function main() {
       updatedAt: createdAt,
       completedAt: completedAt ?? undefined,
       items: {
-        create: [{ productId: product.id, quantity: qty, price: product.price }]
+        create: [{ productId: product.id, quantity: qty, price: product.price, total: product.price * qty }]
       },
       history: {
-        create: [{ status, actorId: null, createdAt }]
+        create: [{ fromStatus: null, toStatus: status, changedByUserId: null, createdAt }]
       }
     }
   }

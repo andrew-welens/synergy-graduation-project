@@ -10,9 +10,11 @@ datasource db {
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
-  name         String?
+  firstName    String?
+  lastName     String?
   passwordHash String
   role         String
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   managedOrders Order[] @relation("OrderManager")
@@ -83,6 +85,7 @@ model OrderItem {
   productId String
   quantity  Int
   price     Float
+  total     Float
   order     Order   @relation(fields: [orderId], references: [id])
   product   Product @relation(fields: [productId], references: [id])
 }
@@ -100,7 +103,7 @@ model Interaction {
 
 model AuditLog {
   id         String   @id @default(uuid())
-  actorId    String
+  userId     String
   action     String
   entityType String
   entityId   String?
@@ -109,10 +112,11 @@ model AuditLog {
 }
 
 model OrderStatusHistory {
-  id        String   @id @default(uuid())
-  orderId   String
-  status    String
-  actorId   String?
-  createdAt DateTime @default(now())
-  order     Order    @relation(fields: [orderId], references: [id])
+  id              String   @id @default(uuid())
+  orderId         String
+  fromStatus      String?
+  toStatus        String
+  changedByUserId String?
+  createdAt       DateTime @default(now())
+  order           Order    @relation(fields: [orderId], references: [id])
 }

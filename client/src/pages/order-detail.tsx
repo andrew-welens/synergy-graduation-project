@@ -298,9 +298,9 @@ export default function OrderDetailPage() {
                     <tbody>
                       {order.history.map((h) => (
                         <tr key={h.id}>
-                          <td>{statusLabel(h.status)}</td>
+                          <td>{h.fromStatus ? `${statusLabel(h.fromStatus)} → ${statusLabel(h.toStatus)}` : statusLabel(h.toStatus)}</td>
                           <td>{new Date(h.createdAt).toLocaleString()}</td>
-                          <td>{h.actorId ?? '—'}</td>
+                          <td>{h.changedByUserId ?? '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -328,7 +328,7 @@ export default function OrderDetailPage() {
                           <tr key={entry.id}>
                             <td>{entry.action}</td>
                             <td>{new Date(entry.createdAt).toLocaleString()}</td>
-                            <td>{entry.actorId ?? '—'}</td>
+                            <td>{entry.userId ?? '—'}</td>
                           </tr>
                         ))}
                       </tbody>

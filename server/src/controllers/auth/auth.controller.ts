@@ -5,7 +5,6 @@ import { LoginDto } from './dto/login.dto'
 import { RefreshDto } from './dto/refresh.dto'
 import { asyncHandler } from '../../middleware/async-handler'
 import { validateBody } from '../../middleware/validate'
-import { requireAuth } from '../../middleware/auth'
 import { sendData } from '../../services/utils/response'
 import { PrismaService } from '../../services/prisma/prisma.service'
 
@@ -29,10 +28,10 @@ export const createAuthRouter = (authService: AuthService, prisma: PrismaService
     validateBody(LoginDto),
     asyncHandler(async (req, res) => {
       const dto = req.body as LoginDto
-      const tokens = await authService.login(dto.email, dto.password)
-      res.cookie(accessCookie.name, tokens.accessToken, accessCookie.options)
-      res.cookie(refreshCookie.name, tokens.refreshToken, refreshCookie.options)
-      sendData(res, tokens, 201)
+      const result = await authService.login(dto.email, dto.password)
+      res.cookie(accessCookie.name, result.accessToken, accessCookie.options)
+      res.cookie(refreshCookie.name, result.refreshToken, refreshCookie.options)
+      sendData(res, result, 201)
     })
   )
 
@@ -42,9 +41,9 @@ export const createAuthRouter = (authService: AuthService, prisma: PrismaService
     asyncHandler(async (req, res) => {
       const dto = req.body as RefreshDto
       const refreshToken = req.cookies?.refreshToken ?? dto.refreshToken
-      const { accessToken } = await authService.refresh(refreshToken)
-      res.cookie(accessCookie.name, accessToken, accessCookie.options)
-      sendData(res, { accessToken })
+      const result = await authService.refresh(refreshToken)
+      res.cookie(accessCookie.name, result.accessToken, accessCookie.options)
+      sendData(res, result)
     })
   )
 
@@ -54,15 +53,6 @@ export const createAuthRouter = (authService: AuthService, prisma: PrismaService
       res.clearCookie(accessCookie.name, accessCookie.options)
       res.clearCookie(refreshCookie.name, refreshCookie.options)
       sendData(res, { ok: true })
-    })
-  )
-
-  router.get(
-    '/me',
-    requireAuth(prisma),
-    asyncHandler(async (req, res) => {
-      const user = req.user
-      sendData(res, { id: user?.id, email: user?.email, role: user?.role, permissions: user?.permissions })
     })
   )
 

@@ -5,7 +5,11 @@ export class UserResponseDto {
 
   email!: string
 
-  name?: string
+  firstName?: string
+
+  lastName?: string
+
+  isActive!: boolean
 
   role!: Role
 

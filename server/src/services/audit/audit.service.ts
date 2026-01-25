@@ -12,7 +12,7 @@ export class AuditService {
     const where: any = {}
     if (query.entityType) where.entityType = query.entityType
     if (query.entityId) where.entityId = query.entityId
-    if (query.userId) where.actorId = query.userId
+    if (query.userId) where.userId = query.userId
     if (query.dateFrom || query.dateTo) {
       where.createdAt = {}
       if (query.dateFrom) where.createdAt.gte = new Date(query.dateFrom)
@@ -31,10 +31,10 @@ export class AuditService {
     return { data: rows as AuditLog[], total }
   }
 
-  async record(actorId: string | null, action: string, entityType: string, entityId?: string, metadata?: Prisma.JsonValue) {
+  async record(userId: string | null, action: string, entityType: string, entityId?: string, metadata?: Prisma.JsonValue) {
     await this.prisma.auditLog.create({
       data: {
-        actorId: actorId ?? 'unknown',
+        userId: userId ?? 'unknown',
         action,
         entityType,
         entityId,

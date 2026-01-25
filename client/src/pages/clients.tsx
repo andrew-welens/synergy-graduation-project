@@ -40,18 +40,35 @@ export default function ClientsPage() {
   const normalizeInn = (value: string) => value.replace(/\D/g, '').slice(0, 10)
   const formatPhone = (value: string) => {
     const digits = normalizePhone(value)
-    if (!digits) return ''
+    if (!digits) return '+7 '
     let local = digits
     if (digits.startsWith('7') || digits.startsWith('8')) {
       local = digits.slice(1)
     }
     local = local.slice(0, 10)
     let result = '+7'
-    if (local.length > 0) result += ` ${local.slice(0, 3)}`
-    if (local.length > 3) result += ` ${local.slice(3, 6)}`
-    if (local.length > 6) result += `-${local.slice(6, 8)}`
-    if (local.length > 8) result += `-${local.slice(8, 10)}`
+    if (local.length > 0) {
+      result += ` (${local.slice(0, 3)}`
+      if (local.length > 3) {
+        result += `) ${local.slice(3, 6)}`
+        if (local.length > 6) {
+          result += `-${local.slice(6, 8)}`
+          if (local.length > 8) {
+            result += `-${local.slice(8, 10)}`
+          }
+        }
+      } else if (local.length === 3) {
+        result += ')'
+      }
+    } else {
+      result += ' '
+    }
     return result
+  }
+  const formatInn = (value: string) => {
+    const digits = normalizeInn(value)
+    if (!digits) return ''
+    return digits
   }
 
   const canWrite = role === 'admin' || role === 'manager' || role === 'operator'
@@ -111,10 +128,11 @@ export default function ClientsPage() {
   const startEdit = (client: Client) => {
     setEditingId(client.id)
     setEditFieldErrors({})
+    const phoneValue = client.phone ?? ''
     setEditForm({
       name: client.name,
       email: client.email ?? '',
-      phone: formatPhone(client.phone ?? ''),
+      phone: phoneValue ? formatPhone(phoneValue) : '+7 ',
       city: client.city ?? '',
       address: client.address ?? '',
       tags: client.tags?.join(', ') ?? '',
@@ -129,6 +147,7 @@ export default function ClientsPage() {
     setFormMode('create')
     setIsFormOpen(true)
     setFieldErrors({})
+    setForm({ name: '', email: '', phone: '+7 ', city: '', address: '', tags: '', type: 'legal', inn: '' })
   }
 
   const closeForm = () => {
@@ -226,7 +245,7 @@ export default function ClientsPage() {
       const created = await clientsApi.create(payload)
       setData((prev) => [created, ...prev])
       setTotal((prev) => prev + 1)
-      setForm({ name: '', email: '', phone: '', city: '', address: '', tags: '', type: 'legal', inn: '' })
+      setForm({ name: '', email: '', phone: '+7 ', city: '', address: '', tags: '', type: 'legal', inn: '' })
       setFieldErrors({})
       setIsFormOpen(false)
       addToast({ type: 'success', title: 'Клиент создан', description: created.name })
@@ -453,14 +472,26 @@ export default function ClientsPage() {
               <div>
                 <input
                   className="input"
-                  placeholder="+7 ___ ___-__-__"
+                  placeholder="+7 (___) ___-__-__"
                   value={formMode === 'create' ? form.phone : editForm.phone}
-                  inputMode="numeric"
+                  inputMode="tel"
                   autoComplete="tel"
-                  maxLength={16}
-                  pattern="^\+7 \d{3} \d{3}-\d{2}-\d{2}$"
-                  title="Формат: +7 900 000-00-00"
-                  onChange={(e) => updateActiveForm({ phone: formatPhone(e.target.value) })}
+                  maxLength={18}
+                  title="Формат: +7 (900) 000-00-00"
+                  onChange={(e) => {
+                    const inputValue = e.target.value
+                    if (inputValue.length < 3) {
+                      updateActiveForm({ phone: '+7 ' })
+                      return
+                    }
+                    const formatted = formatPhone(inputValue)
+                    updateActiveForm({ phone: formatted })
+                  }}
+                  onFocus={(e) => {
+                    if (!e.target.value || e.target.value === '+7') {
+                      e.target.setSelectionRange(3, 3)
+                    }
+                  }}
                 />
                 {fieldError('phone') && <div className="form-error">{fieldError('phone')}</div>}
               </div>
@@ -473,14 +504,17 @@ export default function ClientsPage() {
               <div>
                 <input
                   className="input"
-                  placeholder="ИНН (для юрлиц)"
+                  placeholder="ИНН (10 цифр)"
                   value={formMode === 'create' ? form.inn : editForm.inn}
                   required={(formMode === 'create' ? form.type : editForm.type) === 'legal'}
                   inputMode="numeric"
                   maxLength={10}
                   pattern="^\d{10}$"
                   title="ИНН должен состоять из 10 цифр"
-                  onChange={(e) => updateActiveForm({ inn: normalizeInn(e.target.value) })}
+                  onChange={(e) => {
+                    const formatted = formatInn(e.target.value)
+                    updateActiveForm({ inn: formatted })
+                  }}
                 />
                 {fieldError('inn') && <div className="form-error">{fieldError('inn')}</div>}
               </div>

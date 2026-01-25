@@ -47,9 +47,19 @@ export const openapiSpec = {
         type: 'object',
         properties: {
           accessToken: { type: 'string' },
-          refreshToken: { type: 'string' }
+          refreshToken: { type: 'string' },
+          user: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              email: { type: 'string' },
+              role: { type: 'string' },
+              permissions: { type: 'array', items: { type: 'string' } }
+            },
+            required: ['id', 'email', 'role', 'permissions']
+          }
         },
-        required: ['accessToken', 'refreshToken']
+        required: ['accessToken', 'refreshToken', 'user']
       },
       RefreshRequest: {
         type: 'object',
@@ -60,19 +70,19 @@ export const openapiSpec = {
       RefreshResponse: {
         type: 'object',
         properties: {
-          accessToken: { type: 'string' }
+          accessToken: { type: 'string' },
+          user: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              email: { type: 'string' },
+              role: { type: 'string' },
+              permissions: { type: 'array', items: { type: 'string' } }
+            },
+            required: ['id', 'email', 'role', 'permissions']
+          }
         },
-        required: ['accessToken']
-      },
-      MeResponse: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          email: { type: 'string' },
-          role: { type: 'string' },
-          permissions: { type: 'array', items: { type: 'string' } }
-        },
-        required: ['id', 'email', 'role', 'permissions']
+        required: ['accessToken', 'user']
       },
       User: {
         type: 'object',
@@ -303,14 +313,14 @@ export const openapiSpec = {
         type: 'object',
         properties: {
           id: { type: 'string' },
-          actorId: { type: 'string' },
+          userId: { type: 'string' },
           action: { type: 'string' },
           entityType: { type: 'string' },
           entityId: { type: 'string', nullable: true },
           createdAt: { type: 'string', format: 'date-time' },
           metadata: { type: 'object', nullable: true }
         },
-        required: ['id', 'actorId', 'action', 'entityType', 'createdAt']
+        required: ['id', 'userId', 'action', 'entityType', 'createdAt']
       },
       OrdersReportResponse: {
         type: 'object',
@@ -368,18 +378,6 @@ export const openapiSpec = {
         tags: ['auth'],
         responses: {
           200: { content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiEnvelope' } } } }
-        }
-      }
-    },
-    '/api/auth/me': {
-      get: {
-        tags: ['auth'],
-        security: [{ bearerAuth: [] }],
-        responses: {
-          200: {
-            content: { 'application/json': { schema: { allOf: [{ $ref: '#/components/schemas/ApiEnvelope' }, { properties: { data: { $ref: '#/components/schemas/MeResponse' } } }] } } }
-          },
-          401: { content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } }
         }
       }
     },

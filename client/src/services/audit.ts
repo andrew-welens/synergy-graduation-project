@@ -3,7 +3,7 @@ import { type Paginated } from './types'
 
 export interface AuditEntry {
   id: string
-  actorId: string
+  userId: string
   action: string
   entityType: string
   entityId?: string

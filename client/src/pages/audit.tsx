@@ -97,7 +97,7 @@ export default function AuditPage() {
                     {data.map((row) => (
                       <tr key={row.id}>
                         <td>{new Date(row.createdAt).toLocaleString()}</td>
-                        <td>{row.actorId}</td>
+                        <td>{row.userId}</td>
                         <td>{row.action}</td>
                         <td>{row.entityType}{row.entityId ? ` #${row.entityId}` : ''}</td>
                         <td>{row.metadata ? JSON.stringify(row.metadata) : '-'}</td>

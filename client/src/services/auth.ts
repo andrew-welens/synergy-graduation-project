@@ -1,5 +1,5 @@
 import { http } from './http'
-import { type AuthTokens } from './types'
+import { type AuthTokens, type RefreshResponse } from './types'
 
 export const authApi = {
   login(email: string, password: string) {
@@ -8,11 +8,8 @@ export const authApi = {
       body: JSON.stringify({ email, password })
     })
   },
-  me() {
-    return http.request<{ id: string, email: string, role: string, permissions: string[] }>('/auth/me')
-  },
   refresh(refreshToken?: string) {
-    return http.request<{ accessToken: string }>('/auth/refresh', {
+    return http.request<RefreshResponse>('/auth/refresh', {
       method: 'POST',
       body: refreshToken ? JSON.stringify({ refreshToken }) : undefined
     })
