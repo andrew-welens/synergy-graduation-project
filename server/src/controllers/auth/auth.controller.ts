@@ -21,7 +21,7 @@ const refreshCookie = {
 export const createAuthRouter = (authService: AuthService, prisma: PrismaService) => {
   const router = Router()
   const isTest = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true'
-  const noopMiddleware = (_req: any, _res: any, next: any) => next()
+  const noopMiddleware = (_req: unknown, _res: unknown, next: () => void) => next()
   
   if (isTest) {
     console.log('✓ Auth rate limiting DISABLED for tests')

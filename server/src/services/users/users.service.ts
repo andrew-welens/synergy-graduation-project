@@ -54,11 +54,11 @@ export class UsersService {
       where: { id },
       data: {
         email: dto.email ?? user.email,
-        firstName: dto.firstName !== undefined ? dto.firstName?.trim() : (user as any).firstName,
-        lastName: dto.lastName !== undefined ? dto.lastName?.trim() : (user as any).lastName,
+        firstName: dto.firstName !== undefined ? dto.firstName?.trim() : user.firstName ?? null,
+        lastName: dto.lastName !== undefined ? dto.lastName?.trim() : user.lastName ?? null,
         passwordHash: dto.password ? bcrypt.hashSync(dto.password, 10) : user.passwordHash,
         role: dto.role ?? user.role,
-        isActive: dto.isActive !== undefined ? dto.isActive : (user as any).isActive ?? true
+        isActive: dto.isActive !== undefined ? dto.isActive : user.isActive ?? true
       }
     })
     await this.auditService.record(actorId, 'user.updated', 'user', id)

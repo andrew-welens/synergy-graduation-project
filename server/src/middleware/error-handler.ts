@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import { ApiError, type ApiErrorCode } from '../services/common/errors/api-error'
 import { ValidationError } from 'class-validator'
+import { Prisma } from '@prisma/client'
 
 const defaultCodeByStatus = (status: number): ApiErrorCode => {
   if (status === 401) return 'AUTH_REQUIRED'
@@ -32,6 +33,23 @@ const isValidationErrors = (value: unknown): value is ValidationError[] => {
   return Array.isArray(value) && value.every((item) => item && typeof item === 'object' && ('constraints' in item || 'children' in item))
 }
 
+const isPrismaError = (error: unknown): error is Prisma.PrismaClientKnownRequestError => {
+  return error instanceof Error && 'code' in error && typeof (error as { code: string }).code === 'string'
+}
+
+const handlePrismaError = (error: Prisma.PrismaClientKnownRequestError): { status: number, code: ApiErrorCode, message: string } => {
+  switch (error.code) {
+    case 'P2002':
+      return { status: 409, code: 'VALIDATION_ERROR', message: 'Запись с такими данными уже существует' }
+    case 'P2025':
+      return { status: 404, code: 'NOT_FOUND', message: 'Запись не найдена' }
+    case 'P2003':
+      return { status: 400, code: 'VALIDATION_ERROR', message: 'Нарушение ограничения внешнего ключа' }
+    default:
+      return { status: 500, code: 'INTERNAL_ERROR', message: 'Ошибка базы данных' }
+  }
+}
+
 export const errorHandler = (err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (isValidationErrors(err)) {
     const message = resolveValidationMessage(err)
@@ -40,20 +58,29 @@ export const errorHandler = (err: unknown, req: Request, res: Response, _next: N
   if (err instanceof ApiError) {
     return res.status(err.status).json({ code: err.code, message: err.message })
   }
+  if (isPrismaError(err)) {
+    const { status, code, message } = handlePrismaError(err)
+    return res.status(status).json({ code, message })
+  }
   if (err instanceof Error) {
     const status = 500
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Internal server error:', {
-        message: err.message,
-        stack: err.stack,
-        path: req.path,
-        method: req.method
-      })
-    } else {
-      console.error('Internal server error:', err.message)
+    const isProduction = process.env.NODE_ENV === 'production'
+    const errorLog = {
+      message: err.message,
+      stack: isProduction ? undefined : err.stack,
+      path: req.path,
+      method: req.method,
+      timestamp: new Date().toISOString()
     }
-    return res.status(status).json({ code: defaultCodeByStatus(status), message: process.env.NODE_ENV === 'production' ? 'Внутренняя ошибка сервера' : err.message || 'Ошибка запроса' })
+    console.error('Internal server error:', isProduction ? JSON.stringify(errorLog) : errorLog)
+    return res.status(status).json({ code: defaultCodeByStatus(status), message: isProduction ? 'Внутренняя ошибка сервера' : err.message || 'Ошибка запроса' })
   }
-  console.error('Unknown error:', err)
+  const unknownError = {
+    error: String(err),
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  }
+  console.error('Unknown error:', process.env.NODE_ENV === 'production' ? JSON.stringify(unknownError) : unknownError)
   return res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Ошибка запроса' })
 }

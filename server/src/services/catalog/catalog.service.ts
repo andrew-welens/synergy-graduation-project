@@ -52,7 +52,7 @@ export class CatalogService {
   async findProducts(query: ProductsQueryDto): Promise<{ data: Product[], total: number }> {
     const page = query.page ?? 1
     const pageSize = query.pageSize ?? 20
-    const where: any = {}
+    const where: Prisma.ProductWhereInput = {}
     if (query.categoryId) where.categoryId = query.categoryId
     if (query.isAvailable !== undefined) where.isAvailable = query.isAvailable
     if (query.search) where.name = buildContainsFilter(query.search)

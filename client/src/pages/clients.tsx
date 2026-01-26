@@ -31,7 +31,7 @@ export default function ClientsPage() {
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', city: '', address: '', tags: '', type: 'legal', inn: '' })
   const [typeFilter, setTypeFilter] = useState<'all' | 'legal' | 'individual'>('all')
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'ordersCount' | 'createdAt'>('name')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -214,7 +214,7 @@ export default function ClientsPage() {
   }
 
   useEffect(() => {
-    const handleBackdropClick = (event: MouseEvent) => {
+    const handleBackdropClick = (event: Event) => {
       const target = event.target as HTMLElement
       const menu = target.closest('details.menu[open]')
       if (menu && !menu.querySelector('.menu-content')?.contains(target)) {

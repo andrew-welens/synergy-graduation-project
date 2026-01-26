@@ -4,6 +4,7 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import rateLimit from 'express-rate-limit'
+import helmet from 'helmet'
 import swaggerUi from 'swagger-ui-express'
 import { PrismaService } from './services/prisma/prisma.service'
 import { BootstrapService } from './services/bootstrap/bootstrap.service'
@@ -19,6 +20,7 @@ import { AuthService } from './services/auth/auth.service'
 import { registerRoutes } from './routes'
 import { errorHandler } from './middleware/error-handler'
 import { openapiSpec } from './config/openapi'
+import { validateEnv } from './config/env'
 
 const bootstrap = async () => {
   dotenv.config()
@@ -28,6 +30,8 @@ const bootstrap = async () => {
     process.env.NODE_ENV = 'test'
     process.env.CYPRESS = 'true'
     console.log('✓ Running in TEST mode - rate limiting DISABLED')
+  } else {
+    validateEnv()
   }
 
   const prisma = new PrismaService()
@@ -47,9 +51,22 @@ const bootstrap = async () => {
   const authService = new AuthService(prisma, auditService)
 
   const app = express()
+  
+  const isProduction = process.env.NODE_ENV === 'production'
+  if (isProduction) {
+    app.use(helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false
+    }))
+  }
+  
   app.use(express.json())
   app.use(cookieParser())
-  app.use(cors({ origin: ['http://localhost:5173'], credentials: true }))
+  
+  const corsOrigins = process.env.CORS_ORIGINS 
+    ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+    : ['http://localhost:5173']
+  app.use(cors({ origin: corsOrigins, credentials: true }))
   
   const isTestMode = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true'
   if (!isTestMode) {
@@ -89,6 +106,18 @@ const bootstrap = async () => {
 
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)
+
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error)
+    shutdown()
+  })
+
+  process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection:', reason)
+  })
 }
 
-void bootstrap()
+bootstrap().catch((error) => {
+  console.error('Failed to start server:', error)
+  process.exit(1)
+})

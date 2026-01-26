@@ -8,6 +8,7 @@ import { createOrdersRouter } from '../controllers/orders/orders.controller'
 import { createInteractionsRouter } from '../controllers/interactions/interactions.controller'
 import { createAuditRouter } from '../controllers/audit/audit.controller'
 import { createReportsRouter } from '../controllers/reports/reports.controller'
+import { createHealthRouter } from '../controllers/health/health.controller'
 import { AuthService } from '../services/auth/auth.service'
 import { UsersService } from '../services/users/users.service'
 import { ClientsService } from '../services/clients/clients.service'
@@ -29,6 +30,7 @@ interface RouteServices {
 }
 
 export const registerRoutes = (app: Express, prisma: PrismaService, services: RouteServices) => {
+  app.use('/health', createHealthRouter(prisma))
   app.use('/api/auth', createAuthRouter(services.authService, prisma))
   app.use('/api/users', createUsersRouter(services.usersService, prisma))
   app.use('/api/clients', createClientsRouter(services.clientsService, prisma))

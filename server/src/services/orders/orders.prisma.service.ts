@@ -5,6 +5,7 @@ import { UpdateStatusDto } from '../../controllers/orders/dto/update-status.dto'
 import { OrdersQueryDto } from '../../controllers/orders/dto/orders-query.dto'
 import { UpdateOrderDto } from '../../controllers/orders/dto/update-order.dto'
 import { ApiError } from '../common/errors/api-error'
+import type { Prisma } from '@prisma/client'
 
 export class OrdersPrismaService {
   constructor(private readonly prisma: PrismaService) {}
@@ -12,7 +13,7 @@ export class OrdersPrismaService {
   async findAll(query: OrdersQueryDto): Promise<{ data: Order[], total: number }> {
     const page = query.page ?? 1
     const pageSize = query.pageSize ?? 20
-    const where: any = {}
+    const where: Prisma.OrderWhereInput = {}
     if (query.status) where.status = query.status
     if (query.clientId) where.clientId = query.clientId
     if (query.managerId) where.managerId = query.managerId
@@ -85,7 +86,7 @@ export class OrdersPrismaService {
         throw new ApiError(404, 'NOT_FOUND', 'Not Found')
       }
       const mappedOrder = this.mapOrder(order) as unknown as Order
-      this.ensureStatusTransition(mappedOrder.status, dto.status, role as any)
+      this.ensureStatusTransition(mappedOrder.status, dto.status, role as Role)
       const updated = await tx.order.update({
         where: { id },
         data: {
@@ -140,7 +141,7 @@ export class OrdersPrismaService {
     })
   }
 
-  private async resolveItems(items: { productId: string, quantity: number, price: number }[], tx?: any): Promise<OrderItem[]> {
+  private async resolveItems(items: { productId: string, quantity: number, price: number }[], tx?: Prisma.TransactionClient): Promise<OrderItem[]> {
     if (!items.length) {
       throw new ApiError(400, 'VALIDATION_ERROR', 'Нужны позиции заказа')
     }

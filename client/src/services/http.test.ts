@@ -67,8 +67,12 @@ describe('http', () => {
 
   it('should redirect to login on 401', async () => {
     const originalLocation = window.location
-    delete (window as any).location
-    window.location = { assign: vi.fn(), pathname: '/test', search: '' } as any
+    const mockAssign = vi.fn()
+    Object.defineProperty(window, 'location', {
+      value: { assign: mockAssign, pathname: '/test', search: '' },
+      writable: true,
+      configurable: true
+    })
 
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
@@ -78,9 +82,13 @@ describe('http', () => {
 
     await expect(http.request('/test')).rejects.toThrow()
     expect(sessionStorage.getItem('authRedirect')).toBeTruthy()
-    expect(window.location.assign).toHaveBeenCalledWith('/login')
+    expect(mockAssign).toHaveBeenCalledWith('/login')
 
-    window.location = originalLocation
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      writable: true,
+      configurable: true
+    })
   })
 
   it('should build query string correctly', () => {

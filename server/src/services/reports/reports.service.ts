@@ -2,12 +2,13 @@ import { PrismaService } from '../prisma/prisma.service'
 import { OrdersReportQueryDto } from '../../controllers/reports/dto/orders-report-query.dto'
 import { OverdueReportQueryDto } from '../../controllers/reports/dto/overdue-report-query.dto'
 import { OrderStatus } from '../types/models'
+import type { Prisma } from '@prisma/client'
 
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async orders(query: OrdersReportQueryDto) {
-    const where: any = {}
+    const where: Prisma.OrderWhereInput = {}
     if (query.status) where.status = query.status
     if (query.managerId) where.managerId = query.managerId
     if (query.dateFrom || query.dateTo) {
@@ -36,9 +37,9 @@ export class ReportsService {
     return {
       groupBy,
       data: rows.map((r) => ({
-        key: (r as any)[groupField] ?? 'unassigned',
-        count: (r as any)._count._all,
-        total: (r as any)._sum.total ?? 0
+        key: (r[groupField as keyof typeof r] as string | null) ?? 'unassigned',
+        count: r._count._all,
+        total: r._sum.total ?? 0
       }))
     }
   }
@@ -48,7 +49,7 @@ export class ReportsService {
     const pageSize = query.pageSize ?? 20
     const days = query.days ?? 7
     const threshold = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    const where: any = {
+    const where: Prisma.OrderWhereInput = {
       status: { notIn: [OrderStatus.Done, OrderStatus.Canceled] },
       createdAt: { lte: threshold }
     }

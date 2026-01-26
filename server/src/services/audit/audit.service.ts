@@ -9,7 +9,7 @@ export class AuditService {
   async list(query: AuditQueryDto): Promise<{ data: AuditLog[], total: number }> {
     const page = query.page ?? 1
     const pageSize = query.pageSize ?? 20
-    const where: any = {}
+    const where: Prisma.AuditLogWhereInput = {}
     if (query.entityType) where.entityType = query.entityType
     if (query.entityId) where.entityId = query.entityId
     if (query.userId) where.userId = query.userId

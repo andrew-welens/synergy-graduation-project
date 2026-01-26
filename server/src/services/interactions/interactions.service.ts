@@ -5,6 +5,7 @@ import { InteractionsQueryDto } from '../../controllers/interactions/dto/interac
 import { AuditService } from '../audit/audit.service'
 import { UpdateInteractionDto } from '../../controllers/interactions/dto/update-interaction.dto'
 import { ApiError } from '../common/errors/api-error'
+import type { Prisma } from '@prisma/client'
 
 export class InteractionsService {
   constructor(private readonly prisma: PrismaService, private readonly auditService: AuditService) {}
@@ -12,7 +13,7 @@ export class InteractionsService {
   async list(clientId: string, query: InteractionsQueryDto): Promise<{ data: Interaction[], total: number }> {
     const page = query.page ?? 1
     const pageSize = query.pageSize ?? 20
-    const where: any = { clientId }
+    const where: Prisma.InteractionWhereInput = { clientId }
     if (query.channel) where.channel = query.channel
     if (query.dateFrom || query.dateTo) {
       where.createdAt = {}

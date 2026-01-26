@@ -34,7 +34,7 @@ describe('useAuth', () => {
     const mockResponse = {
       accessToken: 'token',
       refreshToken: 'refresh',
-      user: { id: 'user-1', role: 'admin' }
+      user: { id: 'user-1', email: 'test@example.com', role: 'admin' as const, permissions: [] }
     }
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse)
 
@@ -89,7 +89,7 @@ describe('useAuth', () => {
   it('should ensure authentication on refresh success', async () => {
     const mockResponse = {
       accessToken: 'token',
-      user: { id: 'user-1', role: 'manager' }
+      user: { id: 'user-1', email: 'test@example.com', role: 'manager' as const, permissions: [] }
     }
     vi.mocked(authApi.refresh).mockResolvedValueOnce(mockResponse)
 
@@ -121,7 +121,7 @@ describe('useAuth', () => {
   it('should not call ensure twice', async () => {
     const mockResponse = {
       accessToken: 'token',
-      user: { id: 'user-1', role: 'admin' }
+      user: { id: 'user-1', email: 'test@example.com', role: 'admin' as const, permissions: [] }
     }
     vi.mocked(authApi.refresh).mockResolvedValue(mockResponse)
 

@@ -10,7 +10,6 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:e2e": "cypress run",
     "test:cypress": "cypress open"
   },
   "dependencies": {

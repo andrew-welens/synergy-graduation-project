@@ -4,8 +4,9 @@ import { UpdateClientDto } from '../../controllers/clients/dto/update-client.dto
 import { PrismaService } from '../prisma/prisma.service'
 import { AuditService } from '../audit/audit.service'
 import { ApiError } from '../common/errors/api-error'
+import { Prisma } from '@prisma/client'
 
-const buildContainsFilter = (value: string) => ({ contains: value, mode: 'insensitive' })
+const buildContainsFilter = (value: string) => ({ contains: value, mode: Prisma.QueryMode.insensitive })
 const normalizePhone = (value?: string) => {
   const normalized = value?.replace(/[^\d+]/g, '').trim()
   return normalized && normalized.length > 0 ? normalized : undefined
@@ -23,7 +24,7 @@ export class ClientsService {
     sortBy?: 'name' | 'email' | 'ordersCount' | 'createdAt',
     sortDir?: 'asc' | 'desc'
   ): Promise<{ data: Client[], total: number }> {
-    const where: any = hasOrders ? { orders: { some: {} } } : {}
+    const where: Prisma.ClientWhereInput = hasOrders ? { orders: { some: {} } } : {}
     if (type) {
       where.type = type
     }
@@ -115,13 +116,18 @@ export class ClientsService {
   }
 
   private async ensureNoDuplicate(values: { email?: string, phone?: string, inn?: string }, excludeId?: string) {
-    const conditions = [
-      values.email ? { email: values.email } : null,
-      values.phone ? { phone: values.phone } : null,
-      values.inn ? { inn: values.inn } : null
-    ].filter(Boolean)
+    const conditions: Prisma.ClientWhereInput[] = []
+    if (values.email) {
+      conditions.push({ email: values.email })
+    }
+    if (values.phone) {
+      conditions.push({ phone: values.phone })
+    }
+    if (values.inn) {
+      conditions.push({ inn: values.inn })
+    }
     if (conditions.length === 0) return
-    const where: any = { OR: conditions }
+    const where: Prisma.ClientWhereInput = { OR: conditions }
     if (excludeId) {
       where.NOT = { id: excludeId }
     }
@@ -132,7 +138,7 @@ export class ClientsService {
   }
 
   private buildOrderBy(sortBy?: 'name' | 'email' | 'ordersCount' | 'createdAt', sortDir?: 'asc' | 'desc') {
-    const direction = sortDir ?? 'asc'
+    const direction = sortDir ?? 'desc'
     if (sortBy === 'ordersCount') {
       return { orders: { _count: direction } }
     }

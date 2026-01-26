@@ -159,7 +159,7 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
-        <div className="grid" style={{ gap: 12 }} className="stats-sidebar">
+        <div className="grid stats-sidebar" style={{ gap: 12 }}>
           <div className="stat-card">
             <div className="stat-label">Доход</div>
             <div className="stat-value">{formatCurrency(Math.round(counts.orders * 1480))}</div>
