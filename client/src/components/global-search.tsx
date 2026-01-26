@@ -109,7 +109,7 @@ export function GlobalSearch() {
         }
 
         setResults(searchResults.slice(0, 8))
-        setIsOpen(searchResults.length > 0)
+        setIsOpen(true)
       })
       .catch(() => {
         setResults([])
@@ -178,7 +178,7 @@ export function GlobalSearch() {
         }}
         onKeyDown={handleKeyDown}
       />
-      {isOpen && (isLoading || results.length > 0) && (
+      {isOpen && debouncedQuery.trim().length >= 2 && (
         <div className="global-search-results">
           {isLoading ? (
             <div style={{ padding: 12, textAlign: 'center', color: '#94a3b8' }}>Поиск...</div>
