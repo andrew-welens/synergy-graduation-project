@@ -42,3 +42,7 @@ yarn-error.log*
 
 # Prisma migrations
 server/prisma/migrations/
+
+# Markdown files (except README.md)
+*.md
+!README.md
