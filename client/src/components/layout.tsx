@@ -147,9 +147,10 @@ export default function Layout() {
             <div className="breadcrumbs">
               {pageMeta.breadcrumbs.map((item, index) => {
                 const isLast = index === pageMeta.breadcrumbs.length - 1
+                const hasTo = 'to' in item && item.to
                 return (
                   <Fragment key={`${item.label}-${index}`}>
-                    {item.to && !isLast ? <Link to={item.to}>{item.label}</Link> : <span>{item.label}</span>}
+                    {hasTo && !isLast ? <Link to={item.to}>{item.label}</Link> : <span>{item.label}</span>}
                     {!isLast && <span aria-hidden="true">/</span>}
                   </Fragment>
                 )

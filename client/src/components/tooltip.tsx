@@ -9,6 +9,9 @@ interface TooltipProps {
 export function Tooltip({ content, children, position = 'top' }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
 
+  const existingOnMouseEnter = (children.props as { onMouseEnter?: (e: React.MouseEvent) => void }).onMouseEnter
+  const existingOnMouseLeave = (children.props as { onMouseLeave?: (e: React.MouseEvent) => void }).onMouseLeave
+
   return (
     <span
       className="tooltip-wrapper"
@@ -17,16 +20,15 @@ export function Tooltip({ content, children, position = 'top' }: TooltipProps) {
       onMouseLeave={() => setIsVisible(false)}
     >
       {cloneElement(children, {
-        ...children.props,
         onMouseEnter: (e: React.MouseEvent) => {
           setIsVisible(true)
-          children.props.onMouseEnter?.(e)
+          existingOnMouseEnter?.(e)
         },
         onMouseLeave: (e: React.MouseEvent) => {
           setIsVisible(false)
-          children.props.onMouseLeave?.(e)
+          existingOnMouseLeave?.(e)
         }
-      })}
+      } as any)}
       {isVisible && (
         <div className={`tooltip tooltip-${position}`}>
           {content}

@@ -10,6 +10,7 @@ const seedUser: User = {
   email: 'admin@example.com',
   passwordHash: bcrypt.hashSync('password', 10),
   role: 'admin',
+  isActive: true,
   createdAt: nowIso(),
   updatedAt: nowIso()
 }
@@ -27,7 +28,7 @@ export const db = {
 export const createAudit = (actorId: string, action: string, entityType: string, metadata?: Record<string, unknown>) => {
   const entry: AuditLog = {
     id: randomUUID(),
-    actorId,
+    userId: actorId,
     action,
     entityType,
     createdAt: nowDate(),

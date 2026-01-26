@@ -1,4 +1,5 @@
 import { http } from './http'
+import { type OrderStatus } from './types'
 
 export interface OrdersReportRow {
   key: string
@@ -15,7 +16,7 @@ export interface OverdueOrder {
   id: string
   clientId: string
   clientName?: string
-  status: string
+  status: OrderStatus
   total: number
   managerId?: string | null
   createdAt: string

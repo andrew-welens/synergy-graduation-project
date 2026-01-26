@@ -30,7 +30,7 @@ export const AppDatePicker = ({ value, onChange, placeholder, minDate, maxDate }
   return (
     <DatePicker
       selected={toDate(value)}
-      onChange={(date) => onChange(toValue(date))}
+      onChange={(date: Date | null) => onChange(toValue(date))}
       dateFormat="dd.MM.yyyy"
       placeholderText={placeholder ?? 'дд.мм.гггг'}
       className="input"
@@ -39,8 +39,8 @@ export const AppDatePicker = ({ value, onChange, placeholder, minDate, maxDate }
       showPopperArrow={false}
       isClearable
       locale={ru}
-      minDate={minDate ? toDate(minDate) : undefined}
-      maxDate={maxDate ? toDate(maxDate) : undefined}
+      minDate={minDate ? toDate(minDate) ?? undefined : undefined}
+      maxDate={maxDate ? toDate(maxDate) ?? undefined : undefined}
     />
   )
 }

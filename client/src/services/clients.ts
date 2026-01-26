@@ -9,7 +9,7 @@ export const clientsApi = {
   get(id: string) {
     return http.request<Client>(`/clients/${id}`)
   },
-  create(payload: { name: string, email: string, phone: string, city?: string, address?: string, tags?: string[], type: 'legal' | 'individual', inn?: string }) {
+  create(payload: { name: string, email?: string, phone?: string, city?: string, address?: string, tags?: string[], type: 'legal' | 'individual', inn?: string }) {
     return http.request<Client>('/clients', {
       method: 'POST',
       body: JSON.stringify(payload)
