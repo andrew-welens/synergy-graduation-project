@@ -22,6 +22,13 @@ import { openapiSpec } from './config/openapi'
 
 const bootstrap = async () => {
   dotenv.config()
+  
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true' || process.argv.includes('--test')
+  if (isTestEnv) {
+    process.env.NODE_ENV = 'test'
+    process.env.CYPRESS = 'true'
+    console.log('✓ Running in TEST mode - rate limiting DISABLED')
+  }
 
   const prisma = new PrismaService()
   await prisma.connect()
@@ -43,7 +50,18 @@ const bootstrap = async () => {
   app.use(express.json())
   app.use(cookieParser())
   app.use(cors({ origin: ['http://localhost:5173'], credentials: true }))
-  app.use(rateLimit({ windowMs: 60 * 1000, limit: 100 }))
+  
+  const isTestMode = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true'
+  if (!isTestMode) {
+    app.use(rateLimit({ 
+      windowMs: 60 * 1000, 
+      limit: 100,
+      standardHeaders: true,
+      legacyHeaders: false
+    }))
+  } else {
+    console.log('✓ Global rate limiting DISABLED for tests')
+  }
 
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec))
   registerRoutes(app, prisma, {

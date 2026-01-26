@@ -20,7 +20,21 @@ const refreshCookie = {
 
 export const createAuthRouter = (authService: AuthService, prisma: PrismaService) => {
   const router = Router()
-  const loginLimiter = rateLimit({ windowMs: 60 * 1000, limit: 5 })
+  const isTest = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true'
+  const noopMiddleware = (_req: any, _res: any, next: any) => next()
+  
+  if (isTest) {
+    console.log('✓ Auth rate limiting DISABLED for tests')
+  }
+  
+  const loginLimiter = isTest ? noopMiddleware : rateLimit({ 
+    windowMs: 60 * 1000, 
+    limit: 5 
+  })
+  const refreshLimiter = isTest ? noopMiddleware : rateLimit({ 
+    windowMs: 60 * 1000, 
+    limit: 100 
+  })
 
   router.post(
     '/login',
@@ -37,6 +51,7 @@ export const createAuthRouter = (authService: AuthService, prisma: PrismaService
 
   router.post(
     '/refresh',
+    refreshLimiter,
     validateBody(RefreshDto),
     asyncHandler(async (req, res) => {
       const dto = req.body as RefreshDto
