@@ -43,98 +43,113 @@ export class OrdersPrismaService {
   }
 
   async create(actorId: string, dto: CreateOrderDto): Promise<Order> {
-    const client = await this.prisma.client.findUnique({ where: { id: dto.clientId } })
-    if (!client) {
-      throw new ApiError(404, 'NOT_FOUND', 'Клиент не найден')
-    }
-    const items = await this.resolveItems(dto.items)
-    const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-    const status = dto.status ?? OrderStatus.New
-    const order = await this.prisma.order.create({
-      data: {
-        clientId: dto.clientId,
-        status,
-        comments: dto.comments?.trim() || undefined,
-        managerId: dto.managerId,
-        total,
-        completedAt: status === OrderStatus.Done || status === OrderStatus.Canceled ? new Date() : undefined,
-        items: {
-          create: items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity, total: i.total }))
+    return await this.prisma.$transaction(async (tx) => {
+      const client = await tx.client.findUnique({ where: { id: dto.clientId } })
+      if (!client) {
+        throw new ApiError(404, 'NOT_FOUND', 'Клиент не найден')
+      }
+      const items = await this.resolveItems(dto.items, tx)
+      const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+      const status = dto.status ?? OrderStatus.New
+      const order = await tx.order.create({
+        data: {
+          clientId: dto.clientId,
+          status,
+          comments: dto.comments?.trim() || undefined,
+          managerId: dto.managerId,
+          total,
+          completedAt: status === OrderStatus.Done || status === OrderStatus.Canceled ? new Date() : undefined,
+          items: {
+            create: items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity, total: i.total }))
+          },
+          history: {
+            create: [
+              {
+                fromStatus: null,
+                toStatus: status,
+                changedByUserId: actorId
+              }
+            ]
+          }
         },
-        history: {
-          create: [
-            {
-              fromStatus: null,
-              toStatus: status,
-              changedByUserId: actorId
-            }
-          ]
-        }
-      },
-      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
+        include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
+      })
+      return this.mapOrder(order) as unknown as Order
     })
-    return this.mapOrder(order) as unknown as Order
   }
 
   async updateStatus(actorId: string, role: string, id: string, dto: UpdateStatusDto): Promise<Order> {
-    const order = await this.findOne(id)
-    this.ensureStatusTransition(order.status, dto.status, role as any)
-    const updated = await this.prisma.order.update({
-      where: { id },
-      data: {
-        status: dto.status,
-        completedAt: dto.status === OrderStatus.Done || dto.status === OrderStatus.Canceled ? new Date() : order.completedAt,
-        history: {
-          create: [
-            {
-              fromStatus: order.status,
-              toStatus: dto.status,
-              changedByUserId: actorId
-            }
-          ]
-        }
-      },
-      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
+    return await this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({ where: { id }, include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } } })
+      if (!order) {
+        throw new ApiError(404, 'NOT_FOUND', 'Not Found')
+      }
+      const mappedOrder = this.mapOrder(order) as unknown as Order
+      this.ensureStatusTransition(mappedOrder.status, dto.status, role as any)
+      const updated = await tx.order.update({
+        where: { id },
+        data: {
+          status: dto.status,
+          completedAt: dto.status === OrderStatus.Done || dto.status === OrderStatus.Canceled ? new Date() : order.completedAt,
+          history: {
+            create: [
+              {
+                fromStatus: mappedOrder.status,
+                toStatus: dto.status,
+                changedByUserId: actorId
+              }
+            ]
+          }
+        },
+        include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
+      })
+      return this.mapOrder(updated) as unknown as Order
     })
-    return this.mapOrder(updated) as unknown as Order
   }
 
   async update(actorId: string, role: string, id: string, dto: UpdateOrderDto): Promise<Order> {
-    const order = await this.findOne(id)
-    this.ensureUpdateAllowed(role as Role)
-    this.ensureEditable(order.status)
-    const hasItems = Array.isArray(dto.items)
-    const items = hasItems ? await this.resolveItems(dto.items ?? []) : order.items
-    const total = hasItems ? items.reduce((sum, i) => sum + i.price * i.quantity, 0) : order.total
-    const updated = await this.prisma.order.update({
-      where: { id },
-      data: {
-        managerId: dto.managerId ?? order.managerId,
-        comments: dto.comments !== undefined ? dto.comments.trim() : order.comments,
-        ...(hasItems
-          ? {
-            total,
-            items: {
-              deleteMany: {},
-              create: items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity, total: i.total }))
+    return await this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({ where: { id }, include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } } })
+      if (!order) {
+        throw new ApiError(404, 'NOT_FOUND', 'Not Found')
+      }
+      const mappedOrder = this.mapOrder(order) as unknown as Order
+      this.ensureUpdateAllowed(role as Role)
+      this.ensureEditable(mappedOrder.status)
+      const hasItems = Array.isArray(dto.items)
+      const items = hasItems ? await this.resolveItems(dto.items ?? [], tx) : mappedOrder.items
+      const total = hasItems ? items.reduce((sum, i) => sum + i.price * i.quantity, 0) : mappedOrder.totalAmount
+      const updated = await tx.order.update({
+        where: { id },
+        data: {
+          managerId: dto.managerId ?? order.managerId,
+          comments: dto.comments !== undefined ? dto.comments.trim() : order.comments,
+          ...(hasItems
+            ? {
+              total,
+              items: {
+                deleteMany: {},
+                create: items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity, total: i.total }))
+              }
             }
-          }
-          : {})
-      },
-      include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
+            : {})
+        },
+        include: { items: true, history: true, client: { select: { name: true } }, manager: { select: { firstName: true, lastName: true, email: true } } }
+      })
+      return this.mapOrder(updated) as unknown as Order
     })
-    return this.mapOrder(updated) as unknown as Order
   }
 
-  private async resolveItems(items: { productId: string, quantity: number, price: number }[]): Promise<OrderItem[]> {
+  private async resolveItems(items: { productId: string, quantity: number, price: number }[], tx?: any): Promise<OrderItem[]> {
     if (!items.length) {
       throw new ApiError(400, 'VALIDATION_ERROR', 'Нужны позиции заказа')
     }
+    const prisma = tx ?? this.prisma
     const productIds = items.map((i) => i.productId)
-    const products = await this.prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, isAvailable: true } })
-    const map = new Map(products.map((p) => [p.id, p]))
+    const products = await prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, isAvailable: true } })
+    const map = new Map(products.map((p: { id: string, isAvailable: boolean }) => [p.id, p]))
     return items.map((i) => {
-      const product = map.get(i.productId)
+      const product = map.get(i.productId) as { id: string, isAvailable: boolean } | undefined
       if (!product) {
         throw new ApiError(404, 'NOT_FOUND', `Товар ${i.productId} не найден`)
       }

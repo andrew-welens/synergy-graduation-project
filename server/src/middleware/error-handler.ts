@@ -32,7 +32,7 @@ const isValidationErrors = (value: unknown): value is ValidationError[] => {
   return Array.isArray(value) && value.every((item) => item && typeof item === 'object' && ('constraints' in item || 'children' in item))
 }
 
-export const errorHandler = (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (isValidationErrors(err)) {
     const message = resolveValidationMessage(err)
     return res.status(400).json({ code: 'VALIDATION_ERROR', message })
@@ -42,7 +42,18 @@ export const errorHandler = (err: unknown, _req: Request, res: Response, _next: 
   }
   if (err instanceof Error) {
     const status = 500
-    return res.status(status).json({ code: defaultCodeByStatus(status), message: err.message || 'Ошибка запроса' })
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Internal server error:', {
+        message: err.message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method
+      })
+    } else {
+      console.error('Internal server error:', err.message)
+    }
+    return res.status(status).json({ code: defaultCodeByStatus(status), message: process.env.NODE_ENV === 'production' ? 'Внутренняя ошибка сервера' : err.message || 'Ошибка запроса' })
   }
+  console.error('Unknown error:', err)
   return res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Ошибка запроса' })
 }

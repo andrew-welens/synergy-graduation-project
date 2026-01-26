@@ -35,6 +35,10 @@ model Client {
   updatedAt   DateTime @updatedAt
   orders      Order[]
   interactions Interaction[]
+
+  @@index([managerId])
+  @@index([type])
+  @@index([createdAt])
 }
 
 model Category {
@@ -99,6 +103,9 @@ model Interaction {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   client      Client   @relation(fields: [clientId], references: [id])
+
+  @@index([clientId, createdAt])
+  @@index([managerId])
 }
 
 model AuditLog {
@@ -109,6 +116,10 @@ model AuditLog {
   entityId   String?
   createdAt  DateTime @default(now())
   metadata   Json?
+
+  @@index([userId, createdAt])
+  @@index([entityType, createdAt])
+  @@index([createdAt])
 }
 
 model OrderStatusHistory {
