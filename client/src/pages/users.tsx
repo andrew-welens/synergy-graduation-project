@@ -175,43 +175,79 @@ export default function UsersPage() {
               icon="empty"
             />
           ) : (
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Email</th>
-                    <th>Роль</th>
-                    <th>Создан</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((u) => (
-                    <tr key={u.id}>
-                      <td style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span>{u.email}</span>
-                        <button
-                          className="btn secondary"
-                          type="button"
-                          onClick={() => copyToClipboard(u.email, 'Email')}
-                          style={{ padding: '4px 8px', fontSize: 12 }}
-                        >
-                          Копировать
-                        </button>
-                      </td>
-                      <td>{u.role}</td>
-                      <td>{new Date(u.createdAt).toLocaleString()}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button className="btn secondary" type="button" onClick={() => startEdit(u)}>Редактировать</button>
-                          <button className="btn secondary" type="button" onClick={() => confirmDelete(u)}>Удалить</button>
-                        </div>
-                      </td>
+            <>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Роль</th>
+                      <th>Создан</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {data.map((u) => (
+                      <tr key={u.id}>
+                        <td style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span>{u.email}</span>
+                          <button
+                            className="btn secondary"
+                            type="button"
+                            onClick={() => copyToClipboard(u.email, 'Email')}
+                            style={{ padding: '4px 8px', fontSize: 12 }}
+                          >
+                            Копировать
+                          </button>
+                        </td>
+                        <td>{u.role}</td>
+                        <td>{new Date(u.createdAt).toLocaleString()}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button className="btn secondary" type="button" onClick={() => startEdit(u)}>Редактировать</button>
+                            <button className="btn secondary" type="button" onClick={() => confirmDelete(u)}>Удалить</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="table-mobile">
+                {data.map((u) => (
+                  <div key={u.id} className="table-mobile-card">
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Email</div>
+                      <div className="table-mobile-value">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span>{u.email}</span>
+                          <button
+                            className="btn secondary"
+                            type="button"
+                            onClick={() => copyToClipboard(u.email, 'Email')}
+                            style={{ padding: '4px 8px', fontSize: 12 }}
+                          >
+                            Копировать
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Роль</div>
+                      <div className="table-mobile-value">{u.role}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Создан</div>
+                      <div className="table-mobile-value">{new Date(u.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div className="table-mobile-actions">
+                      <button className="btn secondary" type="button" onClick={() => startEdit(u)}>Редактировать</button>
+                      <button className="btn secondary" type="button" onClick={() => confirmDelete(u)}>Удалить</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </>
       )}

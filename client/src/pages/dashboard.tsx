@@ -98,13 +98,13 @@ export default function DashboardPage() {
   return (
     <div className="grid" style={{ gap: 16 }}>
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="toolbar">
           <div>
             <h3>Сводка</h3>
             <div className="topbar-subtitle">Показатели за последние 30 дней</div>
           </div>
           {canReadReports && (
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="toolbar-actions">
               <button className="btn secondary" type="button" onClick={handleExport} disabled={loading}>Экспорт</button>
               <button className="btn" type="button" onClick={handleCreateReport}>Создать отчет</button>
             </div>
@@ -113,36 +113,36 @@ export default function DashboardPage() {
         {loading && <div>Загрузка...</div>}
         {error && <div style={{ color: '#f87171' }}>{error}</div>}
         {!loading && !error && (
-          <div className="grid" style={{ gap: 16, gridTemplateColumns: canReadCatalog ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', marginTop: 20 }}>
+          <div className="grid stats-grid" style={{ gap: 16, gridTemplateColumns: canReadCatalog ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', marginTop: 20 }}>
             <div className="stat-card">
               <div className="stat-label">Клиенты</div>
               <div className="stat-value">{counts.clients}</div>
-              <div className="stat-meta">+8.2% за месяц</div>
+              <div className="stat-meta"><span className="stat-meta-text">+8.2% за месяц</span></div>
             </div>
             <div className="stat-card">
               <div className="stat-label">Заказы</div>
               <div className="stat-value">{counts.orders}</div>
-              <div className="stat-meta">+5.4% за месяц</div>
+              <div className="stat-meta"><span className="stat-meta-text">+5.4% за месяц</span></div>
             </div>
             {canReadCatalog && (
               <div className="stat-card">
                 <div className="stat-label">Товары</div>
                 <div className="stat-value">{counts.products}</div>
-                <div className="stat-meta">+2.1% за месяц</div>
+                <div className="stat-meta"><span className="stat-meta-text">+2.1% за месяц</span></div>
               </div>
             )}
             <div className="stat-card">
               <div className="stat-label">Новые заявки</div>
               <div className="stat-value">{Math.round(counts.orders * 0.18)}</div>
-              <div className="stat-meta">+12.6% за месяц</div>
+              <div className="stat-meta"><span className="stat-meta-text">+12.6% за месяц</span></div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="grid" style={{ gap: 16, gridTemplateColumns: '2fr 1fr' }}>
+      <div className="grid chart-grid" style={{ gap: 16, gridTemplateColumns: '2fr 1fr' }}>
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="toolbar" style={{ marginBottom: 12 }}>
             <h3>Динамика заказов</h3>
             <div className="topbar-subtitle">Янв–Дек</div>
           </div>
@@ -159,29 +159,31 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
-        <div className="grid" style={{ gap: 12 }}>
+        <div className="grid" style={{ gap: 12 }} className="stats-sidebar">
           <div className="stat-card">
             <div className="stat-label">Доход</div>
             <div className="stat-value">{formatCurrency(Math.round(counts.orders * 1480))}</div>
-            <div className="stat-meta" style={{ color: '#7c94c9' }}>Средний чек {formatCurrency(1480)}</div>
+            <div className="stat-meta" style={{ color: '#7c94c9' }}><span className="stat-meta-text">Средний чек {formatCurrency(1480)}</span></div>
           </div>
           <div className="stat-card">
             <div className="stat-label">Просроченные</div>
             <div className="stat-value" style={{ color: counts.orders * 0.04 > 0 ? '#f87171' : '#f8fafc' }}>{Math.max(0, Math.round(counts.orders * 0.04))}</div>
-            <div className="stat-meta" style={{ color: '#7c94c9' }}>Контроль SLA</div>
+            <div className="stat-meta" style={{ color: '#7c94c9' }}><span className="stat-meta-text">Контроль SLA</span></div>
           </div>
           <div className="stat-card">
             <div className="stat-label">Активные менеджеры</div>
             <div className="stat-value">{Math.max(3, Math.round(counts.clients / 10))}</div>
-            <div className="stat-meta" style={{ color: '#7c94c9' }}>Распределение нагрузки</div>
+            <div className="stat-meta" style={{ color: '#7c94c9' }}><span className="stat-meta-text">Распределение нагрузки</span></div>
           </div>
         </div>
       </div>
 
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div className="toolbar" style={{ marginBottom: 12 }}>
           <h3>Последние заказы</h3>
-          <Link className="btn secondary" to="/orders">Все заказы</Link>
+          <div className="toolbar-actions">
+            <Link className="btn secondary" to="/orders">Все заказы</Link>
+          </div>
         </div>
         {loading && (
           <div className="skeleton">
@@ -193,35 +195,59 @@ export default function DashboardPage() {
           <div className="empty-state">Нет заказов</div>
         )}
         {!loading && recentOrders.length > 0 && (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Клиент</th>
-                  <th>Статус</th>
-                  <th className="text-right">Сумма</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td><Link to={`/orders/${order.id}`}>{order.id}</Link></td>
-                    <td>{order.clientName ?? recentClients.find((c) => c.id === order.clientId)?.name ?? order.clientId}</td>
-                    <td><span className={statusClass(order.status)}>{statusLabel(order.status)}</span></td>
-                    <td className="text-right">{formatCurrency(order.totalAmount ?? order.total)}</td>
+          <>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Клиент</th>
+                    <th>Статус</th>
+                    <th className="text-right">Сумма</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {recentOrders.map((order) => (
+                    <tr key={order.id}>
+                      <td><Link to={`/orders/${order.id}`}>{order.id}</Link></td>
+                      <td>{order.clientName ?? recentClients.find((c) => c.id === order.clientId)?.name ?? order.clientId}</td>
+                      <td><span className={statusClass(order.status)}>{statusLabel(order.status)}</span></td>
+                      <td className="text-right">{formatCurrency(order.totalAmount ?? order.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="table-mobile">
+              {recentOrders.map((order) => (
+                <div key={order.id} className="table-mobile-card">
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">ID</div>
+                    <div className="table-mobile-value"><Link to={`/orders/${order.id}`}>{order.id}</Link></div>
+                  </div>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Клиент</div>
+                    <div className="table-mobile-value">{order.clientName ?? recentClients.find((c) => c.id === order.clientId)?.name ?? order.clientId}</div>
+                  </div>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Статус</div>
+                    <div className="table-mobile-value"><span className={statusClass(order.status)}>{statusLabel(order.status)}</span></div>
+                  </div>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Сумма</div>
+                    <div className="table-mobile-value">{formatCurrency(order.totalAmount ?? order.total)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {hasQuickActions && (
         <div className="card">
           <h3>Быстрые действия</h3>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
+          <div className="actions-row" style={{ marginTop: 8 }}>
             {canWriteClients && <Link className="btn secondary" to="/clients">Добавить клиента</Link>}
             {canWriteOrders && <Link className="btn secondary" to="/orders">Создать заказ</Link>}
             {canWriteCatalog && <Link className="btn secondary" to="/catalog">Добавить товар</Link>}

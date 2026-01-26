@@ -157,37 +157,37 @@ export default function ClientDetailPage() {
           <div className="grid" style={{ gap: 20 }}>
             <div>
               <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Основная информация</h4>
-                <div className="grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Полное имя</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <strong style={{ fontSize: 16 }}>{client.name}</strong>
+                <div className="grid client-info-grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                  <div className="client-info-item">
+                    <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Полное имя</div>
+                    <div className="client-info-value-row">
+                      <strong style={{ fontSize: 16, wordBreak: 'break-word', flex: 1 }}>{client.name}</strong>
                       <button
-                        className="btn secondary"
+                        className="btn secondary client-copy-btn"
                         type="button"
                         onClick={() => copyToClipboard(client.name, 'Имя клиента')}
-                        style={{ padding: '4px 8px', fontSize: 12 }}
+                        style={{ padding: '4px 8px', fontSize: 12, flexShrink: 0 }}
                       >
                         Копировать
                       </button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Тип клиента</div>
+                  <div className="client-info-item">
+                    <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Тип клиента</div>
                     <div>
                       <span className="badge">{client.type === 'legal' ? 'Юридическое лицо' : 'Физическое лицо'}</span>
                     </div>
                   </div>
                   {client.inn && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>ИНН</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span>{client.inn}</span>
+                    <div className="client-info-item">
+                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>ИНН</div>
+                      <div className="client-info-value-row">
+                        <span style={{ wordBreak: 'break-word', flex: 1 }}>{client.inn}</span>
                         <button
-                          className="btn secondary"
+                          className="btn secondary client-copy-btn"
                           type="button"
                           onClick={() => copyToClipboard(client.inn!, 'ИНН')}
-                          style={{ padding: '4px 8px', fontSize: 12 }}
+                          style={{ padding: '4px 8px', fontSize: 12, flexShrink: 0 }}
                         >
                           Копировать
                         </button>
@@ -199,17 +199,17 @@ export default function ClientDetailPage() {
 
               <div>
                 <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Контактная информация</h4>
-                <div className="grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                <div className="grid client-info-grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
                   {client.email && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Email</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <a href={`mailto:${client.email}`} style={{ color: '#cbd5f5', textDecoration: 'none' }}>{client.email}</a>
+                    <div className="client-info-item">
+                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Email</div>
+                      <div className="client-info-value-row">
+                        <a href={`mailto:${client.email}`} style={{ color: '#cbd5f5', textDecoration: 'none', wordBreak: 'break-word', flex: 1 }}>{client.email}</a>
                         <button
-                          className="btn secondary"
+                          className="btn secondary client-copy-btn"
                           type="button"
                           onClick={() => copyToClipboard(client.email!, 'Email')}
-                          style={{ padding: '4px 8px', fontSize: 12 }}
+                          style={{ padding: '4px 8px', fontSize: 12, flexShrink: 0 }}
                         >
                           Копировать
                         </button>
@@ -217,15 +217,15 @@ export default function ClientDetailPage() {
                     </div>
                   )}
                   {client.phone && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Телефон</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <a href={`tel:${client.phone}`} style={{ color: '#cbd5f5', textDecoration: 'none' }}>{client.phone}</a>
+                    <div className="client-info-item">
+                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Телефон</div>
+                      <div className="client-info-value-row">
+                        <a href={`tel:${client.phone}`} style={{ color: '#cbd5f5', textDecoration: 'none', wordBreak: 'break-word', flex: 1 }}>{client.phone}</a>
                         <button
-                          className="btn secondary"
+                          className="btn secondary client-copy-btn"
                           type="button"
                           onClick={() => copyToClipboard(client.phone!, 'Телефон')}
-                          style={{ padding: '4px 8px', fontSize: 12 }}
+                          style={{ padding: '4px 8px', fontSize: 12, flexShrink: 0 }}
                         >
                           Копировать
                         </button>
@@ -233,9 +233,9 @@ export default function ClientDetailPage() {
                     </div>
                   )}
                   {(client.city || client.address) && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Адрес</div>
-                      <div>
+                    <div className="client-info-item">
+                      <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Адрес</div>
+                      <div style={{ wordBreak: 'break-word' }}>
                         {client.city && <span>{client.city}</span>}
                         {client.city && client.address && <span>, </span>}
                         {client.address && <span>{client.address}</span>}
@@ -263,7 +263,7 @@ export default function ClientDetailPage() {
 
               <div>
                 <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Статистика</h4>
-                <div className="grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                <div className="grid client-stats-grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: 'rgba(148, 163, 184, 0.08)', borderRadius: 12 }}>
                     <div className="text-muted" style={{ fontSize: 12 }}>Всего заказов</div>
                     <div style={{ fontSize: 24, fontWeight: 700, color: '#f8fafc' }}>{client.ordersCount ?? 0}</div>
@@ -298,6 +298,44 @@ export default function ClientDetailPage() {
             placeholder="Период"
           />
         </div>
+        {orders.length > 0 && (
+          <div className="table-mobile">
+            {orders.map((o) => {
+              const isOverdue = isOrderOverdue(o)
+              const isCritical = isOrderCritical(o)
+              const cardClass = isCritical ? 'is-critical' : isOverdue ? 'is-overdue' : ''
+              return (
+                <div key={o.id} className={`table-mobile-card ${cardClass}`}>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">ID</div>
+                    <div className="table-mobile-value"><Link to={`/orders/${o.id}`}>{o.id}</Link></div>
+                  </div>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Статус</div>
+                    <div className="table-mobile-value">
+                      <span className={statusClass(o.status)}>{statusLabel(o.status)}</span>
+                      {isOverdue && <span className="badge danger overdue-badge">Просрочен</span>}
+                      {isCritical && <span className="badge critical overdue-badge">Критичный</span>}
+                    </div>
+                  </div>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Сумма</div>
+                    <div className="table-mobile-value">{formatCurrency(o.totalAmount ?? o.total)}</div>
+                  </div>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Позиции</div>
+                    <div className="table-mobile-value">
+                      {o.items?.map((i, idx) => {
+                        const prodName = products.find((p) => p.id === i.productId)?.name ?? i.productId
+                        return <div key={idx}>{prodName} x{i.quantity}</div>
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
         {orderFilterChips.length > 0 && (
           <div className="chips" style={{ marginBottom: 12 }}>
             {orderFilterChips.map((chip) => (
@@ -383,26 +421,46 @@ export default function ClientDetailPage() {
             {canWriteInteractions && <Link className="btn secondary" to={`/clients/${clientId}/interactions`}>Добавить взаимодействие</Link>}
           </div>
         ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Канал</th>
-                  <th>Описание</th>
-                  <th>Дата</th>
-                </tr>
-              </thead>
-              <tbody>
-                {interactions.map((i) => (
-                  <tr key={i.id}>
-                    <td>{i.channel}</td>
-                    <td>{i.description}</td>
-                    <td>{new Date(i.createdAt).toLocaleString()}</td>
+          <>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Канал</th>
+                    <th>Описание</th>
+                    <th>Дата</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {interactions.map((i) => (
+                    <tr key={i.id}>
+                      <td>{i.channel}</td>
+                      <td>{i.description}</td>
+                      <td>{new Date(i.createdAt).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="table-mobile">
+              {interactions.map((i) => (
+                <div key={i.id} className="table-mobile-card">
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Канал</div>
+                    <div className="table-mobile-value">{i.channel}</div>
+                  </div>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Описание</div>
+                    <div className="table-mobile-value">{i.description}</div>
+                  </div>
+                  <div className="table-mobile-row">
+                    <div className="table-mobile-label">Дата</div>
+                    <div className="table-mobile-value">{new Date(i.createdAt).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
           </>
         )}

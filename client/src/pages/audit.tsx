@@ -108,6 +108,32 @@ export default function AuditPage() {
                   </tbody>
                 </table>
               </div>
+              <div className="table-mobile">
+                {data.map((row) => (
+                  <div key={row.id} className="table-mobile-card">
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Дата</div>
+                      <div className="table-mobile-value">{new Date(row.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Пользователь</div>
+                      <div className="table-mobile-value">{row.userId}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Действие</div>
+                      <div className="table-mobile-value">{row.action}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Сущность</div>
+                      <div className="table-mobile-value">{row.entityType}{row.entityId ? ` #${row.entityId}` : ''}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Meta</div>
+                      <div className="table-mobile-value" style={{ wordBreak: 'break-all', fontSize: 12 }}>{row.metadata ? JSON.stringify(row.metadata) : '-'}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
               {totalPages > 1 && (
                 <Pagination
                   page={page}

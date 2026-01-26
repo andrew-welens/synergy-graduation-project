@@ -313,6 +313,53 @@ export default function OrdersPage() {
                 </tbody>
                 </table>
               </div>
+              <div className="table-mobile">
+                {data.map((o) => {
+                  const isOverdue = isOrderOverdue(o)
+                  const isCritical = isOrderCritical(o)
+                  const cardClass = isCritical ? 'is-critical' : isOverdue ? 'is-overdue' : ''
+                  return (
+                    <div key={o.id} className={`table-mobile-card ${cardClass}`}>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">ID</div>
+                        <div className="table-mobile-value"><Link to={`/orders/${o.id}`}>{o.id}</Link></div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Клиент</div>
+                        <div className="table-mobile-value">{o.clientName ?? clients.find((c) => c.id === o.clientId)?.name ?? o.clientId}</div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Статус</div>
+                        <div className="table-mobile-value">
+                          <span className={statusClass(o.status)}>{statusLabel(o.status)}</span>
+                          {isOverdue && <span className="badge danger overdue-badge">Просрочен</span>}
+                          {isCritical && <span className="badge critical overdue-badge">Критичный</span>}
+                        </div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Сумма</div>
+                        <div className="table-mobile-value">{formatCurrency(o.totalAmount ?? o.total)}</div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Позиции</div>
+                        <div className="table-mobile-value">
+                          {o.items?.map((i, idx) => {
+                            const prodName = products.find((p) => p.id === i.productId)?.name ?? i.productId
+                            return <div key={idx}>{prodName} x{i.quantity}</div>
+                          })}
+                        </div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Комментарий</div>
+                        <div className="table-mobile-value">{o.comments ?? '—'}</div>
+                      </div>
+                      <div className="table-mobile-actions">
+                        <Link className="btn secondary" to={`/orders/${o.id}`}>Открыть</Link>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
               {total > 0 && (
                 <Pagination
                   page={page}

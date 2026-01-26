@@ -30,7 +30,7 @@ export default function ClientsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', city: '', address: '', tags: '', type: 'legal', inn: '' })
   const [typeFilter, setTypeFilter] = useState<'all' | 'legal' | 'individual'>('all')
-  const [sortBy, setSortBy] = useState<'name' | 'email' | 'ordersCount'>('name')
+  const [sortBy, setSortBy] = useState<'name' | 'email' | 'ordersCount' | 'createdAt'>('name')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -208,9 +208,36 @@ export default function ClientsPage() {
   }
 
   const closeMenu = (event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation()
     const details = event.currentTarget.closest('details')
     if (details) details.removeAttribute('open')
   }
+
+  useEffect(() => {
+    const handleBackdropClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      const menu = target.closest('details.menu[open]')
+      if (menu && !menu.querySelector('.menu-content')?.contains(target)) {
+        menu.removeAttribute('open')
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        const openMenus = document.querySelectorAll('details.menu[open]')
+        openMenus.forEach((menu) => {
+          menu.removeAttribute('open')
+        })
+      }
+    }
+
+    document.addEventListener('click', handleBackdropClick)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('click', handleBackdropClick)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [])
 
   useEffect(() => {
     if (!initialized || !isAuthenticated) return
@@ -342,10 +369,11 @@ export default function ClientsPage() {
           <option value="legal">Только юрлица</option>
           <option value="individual">Только физлица</option>
         </select>
-        <select className="input" value={sortBy} onChange={(e) => setSortBy(e.target.value as 'name' | 'email' | 'ordersCount')}>
+        <select className="input" value={sortBy} onChange={(e) => setSortBy(e.target.value as 'name' | 'email' | 'ordersCount' | 'createdAt')}>
           <option value="name">Сортировка: имя</option>
           <option value="email">Сортировка: email</option>
           <option value="ordersCount">Сортировка: заказы</option>
+          <option value="createdAt">Сортировка: дата создания</option>
         </select>
         <button className="btn secondary" type="button" onClick={() => setSortDir((prev) => prev === 'asc' ? 'desc' : 'asc')}>
           {sortDir === 'asc' ? 'По возр.' : 'По убыв.'}
@@ -411,7 +439,11 @@ export default function ClientsPage() {
                             <Tooltip content="Дополнительные действия">
                               <summary className="btn secondary">⋯</summary>
                             </Tooltip>
-                            <div className="menu-content">
+                            <div className="menu-content" onClick={(e) => e.stopPropagation()}>
+                              <div className="menu-header">
+                                <div className="menu-title">Действия</div>
+                                <button className="menu-close" type="button" onClick={closeMenu} aria-label="Закрыть">×</button>
+                              </div>
                               <Link to={`/clients/${c.id}/interactions`} className="menu-item" onClick={closeMenu}>Взаимодействия</Link>
                               {canWrite && <Link to={`/orders?clientId=${c.id}`} className="menu-item" onClick={closeMenu}>Создать заказ</Link>}
                               {canWrite && <button className="menu-item" type="button" onClick={(e) => { closeMenu(e); startEdit(c) }}>Редактировать</button>}
@@ -424,6 +456,52 @@ export default function ClientsPage() {
                   ))}
                 </tbody>
                 </table>
+              </div>
+              <div className="table-mobile">
+                {data.map((c) => (
+                  <div key={c.id} className="table-mobile-card">
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Имя</div>
+                      <div className="table-mobile-value"><Link to={`/clients/${c.id}`}>{c.name}</Link></div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Email</div>
+                      <div className="table-mobile-value">{c.email ?? '—'}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Телефон</div>
+                      <div className="table-mobile-value">{c.phone ?? '—'}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Тип</div>
+                      <div className="table-mobile-value">{c.type === 'legal' ? 'Юрлицо' : 'Физлицо'} {c.inn ? `(${c.inn})` : ''}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Теги</div>
+                      <div className="table-mobile-value">{c.tags?.join(', ') || '—'}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Заказы</div>
+                      <div className="table-mobile-value">{c.ordersCount ?? 0}</div>
+                    </div>
+                    <div className="table-mobile-actions">
+                      <Link to={`/clients/${c.id}`} className="btn secondary">Открыть</Link>
+                      <details className="menu">
+                        <summary className="btn secondary">⋯</summary>
+                        <div className="menu-content" onClick={(e) => e.stopPropagation()}>
+                          <div className="menu-header">
+                            <div className="menu-title">Действия</div>
+                            <button className="menu-close" type="button" onClick={closeMenu} aria-label="Закрыть">×</button>
+                          </div>
+                          <Link to={`/clients/${c.id}/interactions`} className="menu-item" onClick={closeMenu}>Взаимодействия</Link>
+                          {canWrite && <Link to={`/orders?clientId=${c.id}`} className="menu-item" onClick={closeMenu}>Создать заказ</Link>}
+                          {canWrite && <button className="menu-item" type="button" onClick={(e) => { closeMenu(e); startEdit(c) }}>Редактировать</button>}
+                          {canDelete && <button className="menu-item" type="button" onClick={(e) => { closeMenu(e); confirmDelete(c) }}>Удалить</button>}
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                ))}
               </div>
               {total > 0 && (
                 <Pagination

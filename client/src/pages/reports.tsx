@@ -278,6 +278,24 @@ export default function ReportsPage() {
                   </tbody>
                 </table>
               </div>
+              <div className="table-mobile">
+                {pagedData.map((row) => (
+                  <div key={row.key} className="table-mobile-card">
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Ключ</div>
+                      <div className="table-mobile-value">{data?.groupBy === 'status' ? statusLabel(row.key as OrderStatus) : row.key}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Кол-во</div>
+                      <div className="table-mobile-value">{row.count}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Сумма</div>
+                      <div className="table-mobile-value">{row.total}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
               {totalPages > 1 && (
                 <div className="pagination">
                   {page > 1 ? (
@@ -343,6 +361,32 @@ export default function ReportsPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="table-mobile">
+                  {overdue.data.map((row) => (
+                    <div key={row.id} className="table-mobile-card">
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">ID</div>
+                        <div className="table-mobile-value"><Link to={`/orders/${row.id}`}>{row.id}</Link></div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Клиент</div>
+                        <div className="table-mobile-value">{row.clientName ?? row.clientId}</div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Статус</div>
+                        <div className="table-mobile-value"><span className={statusClass(row.status)}>{statusLabel(row.status)}</span></div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Сумма</div>
+                        <div className="table-mobile-value">{row.total}</div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Создан</div>
+                        <div className="table-mobile-value">{new Date(row.createdAt).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 {overdueTotalPages > 1 && (
                   <div className="pagination">

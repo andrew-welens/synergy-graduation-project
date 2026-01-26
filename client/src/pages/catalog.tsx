@@ -343,6 +343,25 @@ export default function CatalogPage() {
                   </tbody>
                   </table>
                 </div>
+                <div className="table-mobile">
+                  {sortedCategories.map((c) => (
+                    <div key={c.id} className="table-mobile-card">
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Название</div>
+                        <div className="table-mobile-value">{c.name}</div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Описание</div>
+                        <div className="table-mobile-value">{c.description || '—'}</div>
+                      </div>
+                      {canWrite && (
+                        <div className="table-mobile-actions">
+                          <button className="btn secondary" type="button" onClick={() => startEditCategory(c)}>Редактировать</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
                 {categoriesTotalPages > 1 && (
                   <Pagination
                     page={categoryPage}
@@ -470,6 +489,33 @@ export default function CatalogPage() {
                     ))}
                   </tbody>
                   </table>
+                </div>
+                <div className="table-mobile">
+                  {sortedProducts.map((p) => (
+                    <div key={p.id} className="table-mobile-card">
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Название</div>
+                        <div className="table-mobile-value">{p.name}</div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Категория</div>
+                        <div className="table-mobile-value">{categories.find((c) => c.id === p.categoryId)?.name ?? p.categoryId}</div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Цена</div>
+                        <div className="table-mobile-value">{p.price} / {p.unit}</div>
+                      </div>
+                      <div className="table-mobile-row">
+                        <div className="table-mobile-label">Доступен</div>
+                        <div className="table-mobile-value">{p.isAvailable ? 'Да' : 'Нет'}</div>
+                      </div>
+                      {canWrite && (
+                        <div className="table-mobile-actions">
+                          <button className="btn secondary" type="button" onClick={() => startEditProduct(p)}>Редактировать</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
                 {productsTotalPages > 1 && (
                   <Pagination
