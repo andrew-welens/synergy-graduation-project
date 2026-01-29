@@ -15,7 +15,8 @@
     "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:seed:docker": "node dist/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",

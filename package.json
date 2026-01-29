@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "scripts": {
+    "demo:up": "docker-compose up -d",
+    "demo:down": "docker-compose down"
+  }
+}
