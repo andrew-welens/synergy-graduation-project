@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../utils/auth'
-import { Fragment, useMemo, useState, useRef } from 'react'
+import { useTheme } from '../utils/theme'
+import { Fragment, useMemo, useState } from 'react'
 import { ToastContainer } from './toast-container'
 import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts'
 import { GlobalSearch } from './global-search'
@@ -8,6 +9,8 @@ import { GlobalSearch } from './global-search'
 export default function Layout() {
   const logout = useAuth((s) => s.logout)
   const role = useAuth((s) => s.role)
+  const theme = useTheme((s) => s.theme)
+  const toggleTheme = useTheme((s) => s.toggle)
   const navigate = useNavigate()
   const location = useLocation()
   const onLogout = () => {
@@ -135,6 +138,14 @@ export default function Layout() {
         </nav>
         <div className="sidebar-footer">
           <div className="sidebar-role">{role ?? '—'}</div>
+          <button
+            type="button"
+            className="btn secondary theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
+          >
+            {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+          </button>
           <button className="btn secondary" onClick={onLogout}>Выйти</button>
         </div>
       </aside>

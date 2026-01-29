@@ -156,7 +156,7 @@ export default function ClientDetailPage() {
         {activeTab === 'data' && client && (
           <div className="grid" style={{ gap: 20 }}>
             <div>
-              <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Основная информация</h4>
+              <h4 style={{ marginBottom: 16 }}>Основная информация</h4>
                 <div className="grid client-info-grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
                   <div className="client-info-item">
                     <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Полное имя</div>
@@ -198,13 +198,13 @@ export default function ClientDetailPage() {
               </div>
 
               <div>
-                <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Контактная информация</h4>
+                <h4 style={{ marginBottom: 16 }}>Контактная информация</h4>
                 <div className="grid client-info-grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
                   {client.email && (
                     <div className="client-info-item">
                       <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Email</div>
                       <div className="client-info-value-row">
-                        <a href={`mailto:${client.email}`} style={{ color: '#cbd5f5', textDecoration: 'none', wordBreak: 'break-word', flex: 1 }}>{client.email}</a>
+                        <a href={`mailto:${client.email}`} className="client-info-link" style={{ wordBreak: 'break-word', flex: 1 }}>{client.email}</a>
                         <button
                           className="btn secondary client-copy-btn"
                           type="button"
@@ -220,7 +220,7 @@ export default function ClientDetailPage() {
                     <div className="client-info-item">
                       <div className="text-muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Телефон</div>
                       <div className="client-info-value-row">
-                        <a href={`tel:${client.phone}`} style={{ color: '#cbd5f5', textDecoration: 'none', wordBreak: 'break-word', flex: 1 }}>{client.phone}</a>
+                        <a href={`tel:${client.phone}`} className="client-info-link" style={{ wordBreak: 'break-word', flex: 1 }}>{client.phone}</a>
                         <button
                           className="btn secondary client-copy-btn"
                           type="button"
@@ -247,7 +247,7 @@ export default function ClientDetailPage() {
               </div>
 
               <div>
-                <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Теги и метки</h4>
+                <h4 style={{ marginBottom: 16 }}>Теги и метки</h4>
                 <div className="chips">
                   {(client.tags ?? []).length === 0 ? (
                     <span className="text-muted">Теги не указаны</span>
@@ -262,11 +262,11 @@ export default function ClientDetailPage() {
               </div>
 
               <div>
-                <h4 style={{ marginBottom: 16, color: '#f8fafc' }}>Статистика</h4>
+                <h4 style={{ marginBottom: 16 }}>Статистика</h4>
                 <div className="grid client-stats-grid" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: 'rgba(148, 163, 184, 0.08)', borderRadius: 12 }}>
+                  <div className="client-stat-box">
                     <div className="text-muted" style={{ fontSize: 12 }}>Всего заказов</div>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: '#f8fafc' }}>{client.ordersCount ?? 0}</div>
+                    <div className="client-stat-value">{client.ordersCount ?? 0}</div>
                   </div>
                 </div>
               </div>

@@ -1,24 +1,76 @@
-$bg: #0b1020;
-$bg-soft: #101830;
-$surface: #0f172a;
-$surface-soft: #131b33;
-$border: #1f2a44;
-$border-soft: rgba(148, 163, 184, 0.12);
-$text: #e2e8f0;
-$muted: #94a3b8;
-$accent: #a855f7;
-$accent-strong: #7c3aed;
-$success: #22c55e;
-$danger: #f87171;
-
 :root {
+  --bg: #0b1020;
+  --bg-soft: #101830;
+  --surface: #0f172a;
+  --surface-soft: #131b33;
+  --border: #1f2a44;
+  --border-soft: rgba(148, 163, 184, 0.12);
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #a855f7;
+  --accent-strong: #7c3aed;
+  --success: #22c55e;
+  --danger: #f87171;
+  --heading: #f8fafc;
+  --input-bg: #0b132b;
+  --input-border: #22304a;
+  --body-from: #121a36;
+  --body-to: #070b17;
+  --sidebar-bg: #0a1024;
+  --btn-secondary-color: #cbd5f5;
+  --btn-secondary-border: #334155;
+  --table-hover: rgba(148, 163, 184, 0.08);
+  --menu-hover: rgba(148, 163, 184, 0.12);
+  --backdrop: rgba(2, 6, 23, 0.6);
+  --link-hover: #cbd5f5;
+  --chart-bg: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.95) 100%);
+  --chart-border: rgba(168, 85, 247, 0.1);
+  --chart-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  --chart-bar-bg: linear-gradient(180deg, rgba(168, 85, 247, 1) 0%, rgba(124, 58, 237, 0.9) 50%, rgba(59, 130, 246, 0.85) 100%);
+  --chart-bar-shadow: 0 4px 12px rgba(168, 85, 247, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 4px 20px rgba(2, 6, 23, 0.3), 0 0 0 1px rgba(148, 163, 184, 0.05);
+  --card-hover-shadow: 0 8px 32px rgba(2, 6, 23, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.1);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: $text;
-  background-color: $bg;
+  color: var(--text);
+  background-color: var(--bg);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+[data-theme='light'] {
+  --bg: #f1f5f9;
+  --bg-soft: #e2e8f0;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --border: #e2e8f0;
+  --border-soft: rgba(15, 23, 42, 0.08);
+  --text: #0f172a;
+  --muted: #475569;
+  --accent: #7c3aed;
+  --accent-strong: #6d28d9;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --heading: #0f172a;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --body-from: #e2e8f0;
+  --body-to: #cbd5e1;
+  --sidebar-bg: #ffffff;
+  --btn-secondary-color: #334155;
+  --btn-secondary-border: #cbd5e1;
+  --table-hover: rgba(15, 23, 42, 0.04);
+  --menu-hover: rgba(15, 23, 42, 0.06);
+  --backdrop: rgba(15, 23, 42, 0.4);
+  --link-hover: #475569;
+  --chart-bg: linear-gradient(180deg, rgba(241, 245, 249, 0.8) 0%, rgba(226, 232, 240, 0.95) 100%);
+  --chart-border: rgba(124, 58, 237, 0.15);
+  --chart-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+  --chart-bar-bg: linear-gradient(180deg, rgba(124, 58, 237, 0.95) 0%, rgba(109, 40, 217, 0.9) 50%, rgba(59, 130, 246, 0.85) 100%);
+  --chart-bar-shadow: 0 2px 8px rgba(124, 58, 237, 0.25), inset 0 -1px 2px rgba(255, 255, 255, 0.3);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --card-hover-shadow: 0 8px 32px rgba(124, 58, 237, 0.15), 0 0 0 1px rgba(124, 58, 237, 0.2);
 }
 
 * {
@@ -34,7 +86,7 @@ html, body, #root {
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top left, #121a36 0%, $bg 50%, #070b17 100%);
+  background: radial-gradient(circle at top left, var(--body-from) 0%, var(--bg) 50%, var(--body-to) 100%);
   color: inherit;
   overflow-x: hidden;
 }
@@ -46,7 +98,7 @@ a {
 
 h1, h2, h3, h4 {
   margin: 0;
-  color: #f8fafc;
+  color: var(--heading);
 }
 
 h3 {
@@ -65,7 +117,14 @@ h4 {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: radial-gradient(circle at top left, #121a36 0%, $bg 50%, #070b17 100%);
+  background: radial-gradient(circle at top left, var(--body-from) 0%, var(--bg) 50%, var(--body-to) 100%);
+  position: relative;
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
 }
 
 .auth-card {
@@ -83,17 +142,17 @@ h4 {
 }
 
 .card {
-  background: $surface;
-  border: 1px solid $border;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 4px 20px rgba(2, 6, 23, 0.3), 0 0 0 1px rgba(148, 163, 184, 0.05);
+  box-shadow: var(--card-shadow);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .card:hover {
   border-color: rgba(168, 85, 247, 0.4);
-  box-shadow: 0 8px 32px rgba(2, 6, 23, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.1);
+  box-shadow: var(--card-hover-shadow);
 }
 
 .table {
@@ -104,13 +163,13 @@ h4 {
 .table th,
 .table td {
   padding: 12px 14px;
-  border-bottom: 1px solid $border;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .table th {
   font-size: 11px;
-  color: $muted;
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 700;
@@ -119,13 +178,13 @@ h4 {
 
 .table td {
   font-size: 14px;
-  color: $text;
+  color: var(--text);
   padding-top: 14px;
   padding-bottom: 14px;
 }
 
 .table tbody tr:hover {
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--table-hover);
 }
 
 .table tbody tr.is-overdue {
@@ -150,8 +209,8 @@ h4 {
   gap: 8px;
   padding: 10px 16px;
   border-radius: 12px;
-  border: 1px solid $accent-strong;
-  background: linear-gradient(135deg, $accent-strong 0%, $accent 100%);
+  border: 1px solid var(--accent-strong);
+  background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -164,9 +223,9 @@ h4 {
 }
 
 .btn.secondary {
-  background: $surface;
-  color: #cbd5f5;
-  border-color: #334155;
+  background: var(--surface);
+  color: var(--btn-secondary-color);
+  border-color: var(--btn-secondary-border);
   box-shadow: none;
 }
 
@@ -179,9 +238,9 @@ h4 {
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid #22304a;
-  background: #0b132b;
-  color: $text;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
   font-size: 14px;
 }
 
@@ -192,7 +251,7 @@ h4 {
 }
 
 .input::placeholder {
-  color: #64748b;
+  color: var(--muted);
 }
 
 .actions-row {
@@ -223,7 +282,7 @@ h4 {
 
 .toolbar-meta {
   font-size: 14px;
-  color: #64748b;
+  color: var(--muted);
 }
 
 .toolbar-actions {
@@ -257,10 +316,10 @@ h4 {
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.15);
-  color: #cbd5f5;
+  background: var(--table-hover);
+  color: var(--btn-secondary-color);
   font-size: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  border: 1px solid var(--border-soft);
 }
 
 .chip button {
@@ -277,7 +336,7 @@ h4 {
 }
 
 .text-muted {
-  color: $muted;
+  color: var(--muted);
 }
 
 .menu {
@@ -305,8 +364,8 @@ h4 {
   position: absolute;
   right: 0;
   top: calc(100% + 6px);
-  background: $surface;
-  border: 1px solid $border;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   min-width: 190px;
   max-width: calc(100vw - 32px);
@@ -327,7 +386,7 @@ h4 {
   gap: 8px;
   padding: 8px 10px;
   border-radius: 8px;
-  color: $text;
+  color: var(--text);
   background: transparent;
   border: none;
   text-align: left;
@@ -335,13 +394,13 @@ h4 {
 }
 
 .menu-item:hover {
-  background: rgba(148, 163, 184, 0.12);
+  background: var(--menu-hover);
 }
 
 .drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.6);
+  background: var(--backdrop);
   z-index: 55;
 }
 
@@ -351,8 +410,8 @@ h4 {
   right: 0;
   height: 100vh;
   width: min(520px, 92vw);
-  background: $surface;
-  border-left: 1px solid $border;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
   padding: 20px;
   display: grid;
   gap: 12px;
@@ -370,13 +429,13 @@ h4 {
 .drawer-title {
   font-size: 18px;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--heading);
 }
 
 .dialog-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.65);
+  background: var(--backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,8 +444,8 @@ h4 {
 
 .dialog-card {
   width: min(420px, 92vw);
-  background: $surface;
-  border: 1px solid $border;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 18px 40px rgba(2, 6, 23, 0.6);
@@ -397,12 +456,12 @@ h4 {
 .dialog-title {
   font-size: 16px;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--heading);
 }
 
 .dialog-description {
   font-size: 14px;
-  color: $muted;
+  color: var(--muted);
 }
 
 .dialog-actions {
@@ -439,7 +498,7 @@ h4 {
 .toast-title {
   font-size: 14px;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--heading);
 }
 
 .toast-description {
@@ -481,28 +540,28 @@ h4 {
 }
 
 .react-datepicker {
-  background: $surface;
-  border: 1px solid $border;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  color: $text;
+  color: var(--text);
   box-shadow: 0 16px 32px rgba(2, 6, 23, 0.55);
 }
 
 .react-datepicker__header {
-  background: $surface-soft;
-  border-bottom: 1px solid $border;
+  background: var(--surface)-soft;
+  border-bottom: 1px solid var(--border);
 }
 
 .react-datepicker__current-month,
 .react-datepicker__day-name,
 .react-datepicker__day,
 .react-datepicker__time-name {
-  color: $text;
+  color: var(--text);
 }
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  background: $accent-strong;
+  background: var(--accent-strong);
   color: #fff;
   border-radius: 8px;
 }
@@ -529,8 +588,8 @@ h4 {
 }
 
 .sidebar {
-  background: #0a1024;
-  border-right: 1px solid $border;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
   padding: 24px 20px 0;
   display: flex;
   flex-direction: column;
@@ -542,9 +601,9 @@ h4 {
 .sidebar-brand {
   font-weight: 800;
   font-size: 20px;
-  color: #f8fafc;
+  color: var(--heading);
   letter-spacing: -0.01em;
-  background: linear-gradient(135deg, #f8fafc 0%, rgba(168, 85, 247, 0.9) 100%);
+  background: linear-gradient(135deg, var(--heading) 0%, rgba(168, 85, 247, 0.9) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -561,13 +620,13 @@ h4 {
 }
 
 .sidebar-search input {
-  background: $bg-soft;
+  background: var(--bg-soft);
 }
 
 .global-search-results {
   position: fixed;
   width: min(420px, 90vw);
-  background: $surface;
+  background: var(--surface);
   border: 1px solid rgba(168, 85, 247, 0.2);
   border-radius: 12px;
   box-shadow: 0 16px 40px rgba(2, 6, 23, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.1);
@@ -587,7 +646,7 @@ h4 {
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: $text;
+  color: var(--text);
   text-align: left;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -596,13 +655,13 @@ h4 {
 }
 
 .global-search-result:hover {
-  background: rgba(148, 163, 184, 0.12);
+  background: var(--menu-hover);
 }
 
 .sidebar-link {
   padding: 12px 14px;
   border-radius: 12px;
-  color: $muted;
+  color: var(--muted);
   font-weight: 500;
   background: transparent;
   transition: all 0.2s ease;
@@ -611,14 +670,14 @@ h4 {
 
 .sidebar-link.active {
   background: linear-gradient(90deg, rgba(124, 58, 237, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%);
-  color: #f8fafc;
-  box-shadow: inset 3px 0 0 $accent-strong;
+  color: var(--heading);
+  box-shadow: inset 3px 0 0 var(--accent-strong);
   font-weight: 600;
 }
 
 .sidebar-link:hover:not(.active) {
-  background: rgba(148, 163, 184, 0.1);
-  color: #e2e8f0;
+  background: var(--table-hover);
+  color: var(--text);
 }
 
 .sidebar-footer {
@@ -631,7 +690,7 @@ h4 {
 
 .sidebar-role {
   font-size: 12px;
-  color: $muted;
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   text-align: center;
@@ -657,13 +716,13 @@ h4 {
 .topbar-title {
   font-size: 28px;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--heading);
   letter-spacing: -0.02em;
   margin: 4px 0;
 }
 
 .topbar-subtitle {
-  color: $muted;
+  color: var(--muted);
   font-size: 14px;
   font-weight: 500;
   margin-top: 2px;
@@ -679,28 +738,28 @@ h4 {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: $muted;
+  color: var(--muted);
   margin-bottom: 4px;
 }
 
 .breadcrumbs a {
-  color: $muted;
+  color: var(--muted);
   transition: color 0.2s ease;
 }
 
 .breadcrumbs a:hover {
-  color: #cbd5f5;
+  color: var(--link-hover);
 }
 
 .breadcrumbs span {
-  color: #64748b;
+  color: var(--muted);
 }
 
 .table-wrap {
   max-height: 520px;
   overflow: auto;
   border-radius: 14px;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -711,7 +770,7 @@ h4 {
 .table thead th {
   position: sticky;
   top: 0;
-  background: $surface;
+  background: var(--surface);
   z-index: 1;
 }
 
@@ -721,8 +780,8 @@ h4 {
   align-items: center;
   margin-top: 12px;
   padding: 10px 12px;
-  background: $surface;
-  border: 1px solid $border;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   position: sticky;
   bottom: 0;
@@ -733,15 +792,15 @@ h4 {
   gap: 12px;
   padding: 40px 20px;
   border-radius: 12px;
-  border: 2px dashed rgba(148, 163, 184, 0.2);
-  background: rgba(148, 163, 184, 0.03);
-  color: $muted;
+  border: 2px dashed var(--border-soft);
+  background: var(--table-hover);
+  color: var(--muted);
   text-align: center;
 }
 
 .form-error {
   font-size: 12px;
-  color: $danger;
+  color: var(--danger);
 }
 
 .skeleton {
@@ -785,12 +844,12 @@ h4 {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, $accent-strong 0%, $accent 100%);
+  background: linear-gradient(90deg, var(--accent-strong) 0%, var(--accent) 100%);
 }
 
 .stat-label {
   font-size: 12px;
-  color: $muted;
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600;
@@ -799,14 +858,14 @@ h4 {
 .stat-value {
   font-size: 32px;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--heading);
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 .stat-meta {
   font-size: 13px;
-  color: $success;
+  color: var(--success);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -833,9 +892,9 @@ h4 {
   margin-top: 20px;
   padding: 20px;
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.95) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.1);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-border);
+  box-shadow: var(--chart-shadow);
 }
 
 .chart-item {
@@ -848,20 +907,20 @@ h4 {
 
 .chart-value {
   font-size: 12px;
-  color: #cbd5f5;
+  color: var(--btn-secondary-color);
 }
 
 .chart-bar {
   width: 100%;
   border-radius: 8px 8px 0 0;
-  background: linear-gradient(180deg, rgba(168, 85, 247, 1) 0%, rgba(124, 58, 237, 0.9) 50%, rgba(59, 130, 246, 0.85) 100%);
-  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--chart-bar-bg);
+  box-shadow: var(--chart-bar-shadow);
   min-height: 4px;
 }
 
 .chart-label {
   font-size: 11px;
-  color: $muted;
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -873,7 +932,7 @@ h4 {
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(34, 197, 94, 0.15);
-  color: $success;
+  color: var(--success);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -881,7 +940,7 @@ h4 {
 
 .badge.danger {
   background: rgba(248, 113, 113, 0.15);
-  color: $danger;
+  color: var(--danger);
 }
 
 .badge.critical {
@@ -901,12 +960,12 @@ h4 {
 
 .badge.done {
   background: rgba(34, 197, 94, 0.18);
-  color: $success;
+  color: var(--success);
 }
 
 .badge.canceled {
   background: rgba(248, 113, 113, 0.18);
-  color: $danger;
+  color: var(--danger);
 }
 
 .badge {
@@ -926,9 +985,9 @@ h4 {
   position: absolute;
   padding: 6px 10px;
   background: rgba(15, 23, 42, 0.95);
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: $text;
+  color: var(--text);
   font-size: 12px;
   white-space: nowrap;
   z-index: 1000;
@@ -968,13 +1027,13 @@ h4 {
 
 .progress-bar-label {
   font-size: 12px;
-  color: $muted;
+  color: var(--muted);
 }
 
 .progress-bar-track {
   width: 100%;
   height: 8px;
-  background: rgba(148, 163, 184, 0.15);
+  background: var(--table-hover);
   border-radius: 999px;
   overflow: hidden;
   position: relative;
@@ -982,7 +1041,7 @@ h4 {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, $accent-strong 0%, $accent 100%);
+  background: linear-gradient(90deg, var(--accent-strong) 0%, var(--accent) 100%);
   border-radius: 999px;
   transition: width 0.3s ease-out;
   box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
@@ -990,12 +1049,36 @@ h4 {
 
 .progress-bar-percentage {
   font-size: 12px;
-  color: $muted;
+  color: var(--muted);
   text-align: right;
 }
 
 .overdue-badge {
   margin-left: 8px;
+}
+
+.client-info-link {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.client-info-link:hover {
+  color: var(--accent);
+}
+
+.client-stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--table-hover);
+  border-radius: 12px;
+}
+
+.client-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--heading);
 }
 
 .tabs {
@@ -1007,15 +1090,15 @@ h4 {
 .tab {
   padding: 8px 12px;
   border-radius: 10px;
-  border: 1px solid #22304a;
-  background: $surface;
-  color: $muted;
+  border: 1px solid var(--input-border);
+  background: var(--surface);
+  color: var(--muted);
   cursor: pointer;
 }
 
 .tab.active {
-  border-color: $accent-strong;
-  color: #e2e8f0;
+  border-color: var(--accent-strong);
+  color: var(--text);
   box-shadow: 0 8px 18px rgba(124, 58, 237, 0.2);
 }
 
@@ -1187,8 +1270,8 @@ h4 {
   }
 
   .table-mobile-card {
-    background: $surface;
-    border: 1px solid $border;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px;
     display: grid;
@@ -1202,7 +1285,7 @@ h4 {
 
   .table-mobile-label {
     font-size: 11px;
-    color: $muted;
+    color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     font-weight: 700;
@@ -1210,7 +1293,7 @@ h4 {
 
   .table-mobile-value {
     font-size: 14px;
-    color: $text;
+    color: var(--text);
     word-break: break-word;
   }
 
@@ -1220,7 +1303,7 @@ h4 {
     flex-wrap: wrap;
     margin-top: 8px;
     padding-top: 12px;
-    border-top: 1px solid $border;
+    border-top: 1px solid var(--border);
   }
 
   .table-mobile-card.is-overdue {
@@ -1387,7 +1470,7 @@ h4 {
     transform: translateX(-100%);
     transition: transform 0.2s ease;
     z-index: 60;
-    background: #0a1024;
+    background: var(--sidebar-bg);
     padding: 12px 16px;
     gap: 12px;
     flex-direction: column;
@@ -1400,7 +1483,7 @@ h4 {
   .sidebar-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(2, 6, 23, 0.5);
+    background: var(--backdrop);
     z-index: 55;
   }
 
@@ -1532,7 +1615,7 @@ h4 {
     content: '';
     position: fixed;
     inset: 0;
-    background: rgba(2, 6, 23, 0.6);
+    background: var(--backdrop);
     z-index: 199;
     pointer-events: auto;
     animation: fadeIn 0.2s ease-out;
@@ -1580,9 +1663,9 @@ h4 {
     justify-content: space-between;
     align-items: center;
     padding: 16px 16px 12px;
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid var(--border);
     flex-shrink: 0;
-    background: $surface;
+    background: var(--surface);
     border-radius: 20px 20px 0 0;
     position: sticky;
     top: 0;
@@ -1592,13 +1675,13 @@ h4 {
   .menu-title {
     font-size: 18px;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--heading);
   }
 
   .menu-close {
     background: transparent;
     border: none;
-    color: $text;
+    color: var(--text);
     font-size: 32px;
     line-height: 1;
     cursor: pointer;
@@ -1613,7 +1696,7 @@ h4 {
   }
 
   .menu-close:hover {
-    background: rgba(148, 163, 184, 0.12);
+    background: var(--menu-hover);
   }
 
   .menu-content > .menu-item:first-of-type {

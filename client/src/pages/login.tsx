@@ -1,9 +1,12 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../utils/auth'
+import { useTheme } from '../utils/theme'
 
 export default function LoginPage() {
   const { isAuthenticated, login, loading, error } = useAuth()
+  const theme = useTheme((s) => s.theme)
+  const toggleTheme = useTheme((s) => s.toggle)
   const navigate = useNavigate()
   const location = useLocation()
   const storedRedirect = sessionStorage.getItem('authRedirect')
@@ -36,6 +39,14 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page">
+      <button
+        type="button"
+        className="btn secondary theme-toggle auth-theme-toggle"
+        onClick={toggleTheme}
+        aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
+      >
+        {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+      </button>
       <div className="card auth-card">
         <h2>Вход</h2>
         <form className="grid auth-form" onSubmit={handleSubmit}>
