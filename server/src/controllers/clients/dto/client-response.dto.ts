@@ -24,6 +24,8 @@ export class ClientResponseDto {
   updatedAt!: string
 
   ordersCount?: number
+
+  interactionsCount?: number
 }
 
 export class ClientsListResponseDto {

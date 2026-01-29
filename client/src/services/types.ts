@@ -51,6 +51,7 @@ export interface Client {
   createdAt: string
   updatedAt: string
   ordersCount?: number
+  interactionsCount?: number
 }
 
 export interface Category {

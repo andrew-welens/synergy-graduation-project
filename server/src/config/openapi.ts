@@ -129,7 +129,8 @@ export const openapiSpec = {
           inn: { type: 'string', nullable: true },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
-          ordersCount: { type: 'number', nullable: true }
+          ordersCount: { type: 'number', nullable: true },
+          interactionsCount: { type: 'number', nullable: true }
         },
         required: ['id', 'name', 'tags', 'type', 'createdAt', 'updatedAt']
       },

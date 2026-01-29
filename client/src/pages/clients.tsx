@@ -418,6 +418,7 @@ export default function ClientsPage() {
                     <th>Тип</th>
                     <th>Теги</th>
                     <th className="text-right">Заказы</th>
+                    <th className="text-right">Взаимодействия</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -430,6 +431,7 @@ export default function ClientsPage() {
                       <td>{c.type === 'legal' ? 'Юрлицо' : 'Физлицо'} {c.inn ? `(${c.inn})` : ''}</td>
                       <td>{c.tags?.join(', ')}</td>
                       <td className="text-right">{c.ordersCount ?? 0}</td>
+                      <td className="text-right">{c.interactionsCount ?? 0}</td>
                       <td>
                         <div className="actions-row">
                           <Tooltip content="Открыть карточку клиента">
@@ -483,6 +485,10 @@ export default function ClientsPage() {
                     <div className="table-mobile-row">
                       <div className="table-mobile-label">Заказы</div>
                       <div className="table-mobile-value">{c.ordersCount ?? 0}</div>
+                    </div>
+                    <div className="table-mobile-row">
+                      <div className="table-mobile-label">Взаимодействия</div>
+                      <div className="table-mobile-value">{c.interactionsCount ?? 0}</div>
                     </div>
                     <div className="table-mobile-actions">
                       <Link to={`/clients/${c.id}`} className="btn secondary">Открыть</Link>

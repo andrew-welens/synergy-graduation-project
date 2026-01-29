@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx'
 import { Link } from 'react-router-dom'
 import { ordersApi } from '../services/orders'
 import { catalogApi } from '../services/catalog'
+import { clientsApi } from '../services/clients'
 
 export default function ReportsPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -154,10 +155,45 @@ export default function ReportsPage() {
       const productsWorksheet = XLSX.utils.aoa_to_sheet(productsSheetData)
       productsWorksheet['!cols'] = [{ wch: 38 }, { wch: 32 }, { wch: 12 }, { wch: 16 }, { wch: 12 }]
 
+      const allClients = []
+      const clientsPageSize = 200
+      let clientsPage = 1
+      let clientsTotal = 0
+      do {
+        const res = await clientsApi.list({ page: clientsPage, pageSize: clientsPageSize, sortBy: 'name', sortDir: 'asc' })
+        clientsTotal = res.total
+        allClients.push(...res.data)
+        clientsPage += 1
+      } while (allClients.length < clientsTotal)
+
+      allClients.sort((a, b) => (a.type === 'legal' && b.type === 'individual' ? -1 : a.type === 'individual' && b.type === 'legal' ? 1 : a.name.localeCompare(b.name)))
+
+      const typeLabel = (t: string) => (t === 'legal' ? 'Юр. лицо' : 'Физ. лицо')
+      const clientsHeader = ['ID', 'Наименование', 'Email', 'Телефон', 'Город', 'Адрес', 'Тип', 'ИНН', 'Теги', 'Заказов', 'Взаимодействия', 'Создан', 'Обновлен']
+      const clientsRows = allClients.map((c) => [
+        c.id,
+        c.name,
+        c.email ?? '',
+        c.phone ?? '',
+        c.city ?? '',
+        c.address ?? '',
+        typeLabel(c.type),
+        c.inn ?? '',
+        (c.tags ?? []).join(', '),
+        c.ordersCount ?? 0,
+        c.interactionsCount ?? 0,
+        new Date(c.createdAt).toLocaleString(),
+        new Date(c.updatedAt).toLocaleString()
+      ])
+      const clientsSheetData = [clientsHeader, ...clientsRows]
+      const clientsWorksheet = XLSX.utils.aoa_to_sheet(clientsSheetData)
+      clientsWorksheet['!cols'] = [{ wch: 38 }, { wch: 32 }, { wch: 28 }, { wch: 16 }, { wch: 20 }, { wch: 36 }, { wch: 12 }, { wch: 14 }, { wch: 24 }, { wch: 10 }, { wch: 16 }, { wch: 20 }, { wch: 20 }]
+
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Сводка')
       XLSX.utils.book_append_sheet(workbook, detailsWorksheet, 'Заказы')
       XLSX.utils.book_append_sheet(workbook, productsWorksheet, 'Товары')
+      XLSX.utils.book_append_sheet(workbook, clientsWorksheet, 'Клиенты')
       const now = new Date()
       const parts = new Intl.DateTimeFormat('ru-RU', {
         timeZone: 'Europe/Moscow',

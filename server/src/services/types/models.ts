@@ -89,6 +89,7 @@ export interface Client {
   createdAt: Date
   updatedAt: Date
   ordersCount?: number
+  interactionsCount?: number
 }
 
 export interface Category {

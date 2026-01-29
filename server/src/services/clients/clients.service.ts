@@ -43,18 +43,18 @@ export class ClientsService {
       orderBy,
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { _count: { select: { orders: true } } }
+      include: { _count: { select: { orders: true, interactions: true } } }
     })
-    const data = items.map((c) => ({ ...c, tags: JSON.parse(c.tags), ordersCount: c._count.orders })) as Client[]
+    const data = items.map((c) => ({ ...c, tags: JSON.parse(c.tags), ordersCount: c._count.orders, interactionsCount: c._count.interactions })) as Client[]
     return { data, total }
   }
 
   async findOne(id: string): Promise<Client> {
-    const client = await this.prisma.client.findUnique({ where: { id }, include: { _count: { select: { orders: true } } } })
+    const client = await this.prisma.client.findUnique({ where: { id }, include: { _count: { select: { orders: true, interactions: true } } } })
     if (!client) {
       throw new ApiError(404, 'NOT_FOUND', 'Not Found')
     }
-    return { ...client, tags: JSON.parse(client.tags), ordersCount: client._count.orders } as Client
+    return { ...client, tags: JSON.parse(client.tags), ordersCount: client._count.orders, interactionsCount: client._count.interactions } as Client
   }
 
   async create(actorId: string, dto: CreateClientDto): Promise<Client> {
