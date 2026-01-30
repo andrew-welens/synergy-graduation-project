@@ -8,6 +8,48 @@ import { SkeletonTable } from '../components/skeleton-table'
 import { Pagination } from '../components/pagination'
 import { EmptyState } from '../components/empty-state'
 
+const ACTION_LABELS: Record<string, string> = {
+  'auth.login': 'Вход в систему',
+  'auth.logout': 'Выход',
+  'interaction.created': 'Создано взаимодействие',
+  'interaction.updated': 'Изменено взаимодействие',
+  'interaction.deleted': 'Удалено взаимодействие',
+  'client.created': 'Создан клиент',
+  'client.updated': 'Изменён клиент',
+  'client.deleted': 'Удалён клиент',
+  'order.created': 'Создан заказ',
+  'order.updated': 'Изменён заказ',
+  'order.status.changed': 'Изменён статус заказа',
+  'order.deleted': 'Удалён заказ',
+  'user.created': 'Создан пользователь',
+  'user.updated': 'Изменён пользователь',
+  'user.deleted': 'Удалён пользователь',
+  'product.created': 'Создан товар',
+  'product.updated': 'Изменён товар',
+  'product.deleted': 'Удалён товар',
+  'category.created': 'Создана категория',
+  'category.updated': 'Изменена категория',
+  'category.deleted': 'Удалена категория'
+}
+
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+  auth: 'Аутентификация',
+  interaction: 'Взаимодействие',
+  client: 'Клиент',
+  order: 'Заказ',
+  user: 'Пользователь',
+  product: 'Товар',
+  category: 'Категория'
+}
+
+function actionLabel(action: string): string {
+  return ACTION_LABELS[action] ?? action
+}
+
+function entityTypeLabel(entityType: string): string {
+  return ENTITY_TYPE_LABELS[entityType] ?? entityType
+}
+
 export default function AuditPage() {
   const { isAuthenticated, initialized, role } = useAuth()
   const [data, setData] = useState<AuditEntry[]>([])
@@ -92,16 +134,16 @@ export default function AuditPage() {
                       <th>Пользователь</th>
                       <th>Действие</th>
                       <th>Сущность</th>
-                      <th>Meta</th>
+                      <th>Метаданные</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.map((row) => (
                       <tr key={row.id}>
                         <td>{new Date(row.createdAt).toLocaleString()}</td>
-                        <td>{row.userId}</td>
-                        <td>{row.action}</td>
-                        <td>{row.entityType}{row.entityId ? ` #${row.entityId}` : ''}</td>
+                        <td title={row.userId}>{row.userEmail ?? row.userId}</td>
+                        <td>{actionLabel(row.action)}</td>
+                        <td>{entityTypeLabel(row.entityType)}{row.entityId ? ` #${row.entityId}` : ''}</td>
                         <td>{row.metadata ? JSON.stringify(row.metadata) : '-'}</td>
                       </tr>
                     ))}
@@ -117,18 +159,18 @@ export default function AuditPage() {
                     </div>
                     <div className="table-mobile-row">
                       <div className="table-mobile-label">Пользователь</div>
-                      <div className="table-mobile-value">{row.userId}</div>
+                      <div className="table-mobile-value" title={row.userId}>{row.userEmail ?? row.userId}</div>
                     </div>
                     <div className="table-mobile-row">
                       <div className="table-mobile-label">Действие</div>
-                      <div className="table-mobile-value">{row.action}</div>
+                      <div className="table-mobile-value">{actionLabel(row.action)}</div>
                     </div>
                     <div className="table-mobile-row">
                       <div className="table-mobile-label">Сущность</div>
-                      <div className="table-mobile-value">{row.entityType}{row.entityId ? ` #${row.entityId}` : ''}</div>
+                      <div className="table-mobile-value">{entityTypeLabel(row.entityType)}{row.entityId ? ` #${row.entityId}` : ''}</div>
                     </div>
                     <div className="table-mobile-row">
-                      <div className="table-mobile-label">Meta</div>
+                      <div className="table-mobile-label">Метаданные</div>
                       <div className="table-mobile-value" style={{ wordBreak: 'break-all', fontSize: 12 }}>{row.metadata ? JSON.stringify(row.metadata) : '-'}</div>
                     </div>
                   </div>

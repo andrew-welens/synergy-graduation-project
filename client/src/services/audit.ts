@@ -4,6 +4,7 @@ import { type Paginated } from './types'
 export interface AuditEntry {
   id: string
   userId: string
+  userEmail?: string
   action: string
   entityType: string
   entityId?: string

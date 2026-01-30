@@ -3,6 +3,8 @@ export class AuditLogResponseDto {
 
   userId!: string
 
+  userEmail?: string
+
   action!: string
 
   entityType!: string

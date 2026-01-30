@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { interactionsApi } from '../services/interactions'
 import { type Interaction } from '../services/types'
@@ -7,6 +7,8 @@ import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
 import { ConfirmDialog } from '../components/confirm-dialog'
 import { RetryPanel } from '../components/retry-panel'
+
+const DEFAULT_CHANNEL_HINTS = ['Email', 'Телефон', 'Встреча', 'Мессенджер', 'Письмо', 'Чат']
 
 export default function InteractionsPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -17,6 +19,7 @@ export default function InteractionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({ channel: '', description: '' })
   const [channelFilter, setChannelFilter] = useState('')
+  const channelOptions = useMemo(() => Array.from(new Set([...DEFAULT_CHANNEL_HINTS, ...data.map((i) => i.channel).filter(Boolean)])).sort(), [data])
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [page, setPage] = useState(1)
@@ -24,6 +27,10 @@ export default function InteractionsPage() {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ channel: '', description: '' })
+  const channelOptionsWithEdit = useMemo(() => {
+    if (!editingId || !editForm.channel.trim()) return channelOptions
+    return channelOptions.includes(editForm.channel) ? channelOptions : [editForm.channel, ...channelOptions].sort()
+  }, [channelOptions, editingId, editForm.channel])
   const [confirmState, setConfirmState] = useState({ isOpen: false, title: '', description: '', onConfirm: null as null | (() => void) })
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -153,7 +160,12 @@ export default function InteractionsPage() {
         <span style={{ color: '#64748b', fontSize: 14 }}>{total}</span>
       </div>
       <div className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(2, 1fr)', marginBottom: 12 }}>
-        <input className="input" placeholder="Фильтр по каналу" value={channelFilter} onChange={(e) => { setChannelFilter(e.target.value); setPage(1) }} />
+        <select className="input" value={channelFilter} onChange={(e) => { setChannelFilter(e.target.value); setPage(1) }} aria-label="Фильтр по каналу">
+          <option value="">Все каналы</option>
+          {channelOptions.map((ch) => (
+            <option key={ch} value={ch}>{ch}</option>
+          ))}
+        </select>
         <AppDateRangePicker
           from={dateFrom}
           to={dateTo}
@@ -163,7 +175,12 @@ export default function InteractionsPage() {
       </div>
       {canWrite && (
         <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 12 }} onSubmit={handleCreate}>
-          <input className="input" placeholder="Канал" value={form.channel} onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value }))} />
+          <select className="input" value={form.channel} onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value }))} aria-label="Канал">
+            <option value="">Выберите канал</option>
+            {channelOptions.map((ch) => (
+              <option key={ch} value={ch}>{ch}</option>
+            ))}
+          </select>
           <input className="input" placeholder="Описание" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           <span title={!isCreateValid ? createDisabledReason : undefined} style={{ display: 'inline-block' }}>
             <button className="btn" type="submit" disabled={loading || !isCreateValid}>Добавить</button>
@@ -172,7 +189,12 @@ export default function InteractionsPage() {
       )}
       {canWrite && editingId && (
         <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 12 }} onSubmit={handleUpdate}>
-          <input className="input" placeholder="Канал" value={editForm.channel} onChange={(e) => setEditForm((f) => ({ ...f, channel: e.target.value }))} />
+          <select className="input" value={editForm.channel} onChange={(e) => setEditForm((f) => ({ ...f, channel: e.target.value }))} aria-label="Канал">
+            <option value="">Выберите канал</option>
+            {channelOptionsWithEdit.map((ch) => (
+              <option key={ch} value={ch}>{ch}</option>
+            ))}
+          </select>
           <input className="input" placeholder="Описание" value={editForm.description} onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} />
           <div style={{ display: 'flex', gap: 8 }}>
             <span title={!isEditValid ? editDisabledReason : undefined} style={{ display: 'inline-block' }}>
@@ -194,7 +216,6 @@ export default function InteractionsPage() {
           {data.length === 0 ? (
             <div className="empty-state">
               <div>Нет данных</div>
-              {canWrite && <button className="btn secondary" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Добавить взаимодействие</button>}
             </div>
           ) : (
             <>

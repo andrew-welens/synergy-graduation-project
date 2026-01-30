@@ -28,7 +28,16 @@ export class AuditService {
         take: pageSize
       })
     ])
-    return { data: rows as AuditLog[], total }
+    const userIds = [...new Set((rows as { userId: string }[]).map((r) => r.userId).filter(Boolean))]
+    const users = userIds.length > 0
+      ? await this.prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, email: true } })
+      : []
+    const userEmailById = new Map(users.map((u) => [u.id, u.email]))
+    const data = (rows as AuditLog[]).map((row) => ({
+      ...row,
+      userEmail: userEmailById.get(row.userId)
+    }))
+    return { data, total }
   }
 
   async record(userId: string | null, action: string, entityType: string, entityId?: string, metadata?: Prisma.JsonValue) {

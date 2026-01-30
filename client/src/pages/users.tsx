@@ -200,7 +200,7 @@ export default function UsersPage() {
                             Копировать
                           </button>
                         </td>
-                        <td>{u.role}</td>
+                        <td className="cell-nowrap">{u.role}</td>
                         <td>{new Date(u.createdAt).toLocaleString()}</td>
                         <td>
                           <div style={{ display: 'flex', gap: 8 }}>
