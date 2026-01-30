@@ -300,26 +300,33 @@ async function main() {
   })
   await prisma.client.createMany({ data: clients })
 
-  // категории и товары
   const categories = await prisma.category.createMany({
     data: [
-      { name: 'Техника', description: 'Бытовая электроника' },
-      { name: 'Одежда', description: 'Мужская и женская' },
-      { name: 'Продукты', description: 'Еда и напитки' }
+      { name: 'Ноутбуки', description: 'Портативные компьютеры' },
+      { name: 'Роутеры', description: 'Беспроводные маршрутизаторы' },
+      { name: 'Модемы', description: 'Модемы для подключения к сети' },
+      { name: 'Смартфоны', description: 'Мобильные телефоны' },
+      { name: 'Планшеты', description: 'Планшетные компьютеры' }
     ]
   })
   const catIds = await prisma.category.findMany({ select: { id: true, name: true } })
   const getCat = (name: string) => catIds.find((c) => c.name === name)?.id
   const products = [
-    { name: 'Телефон A1', categoryId: getCat('Техника'), price: 29990, unit: 'шт', isAvailable: true, sku: 'A1-001' },
-    { name: 'Ноутбук B2', categoryId: getCat('Техника'), price: 89990, unit: 'шт', isAvailable: true, sku: 'NB-B2' },
-    { name: 'Наушники C3', categoryId: getCat('Техника'), price: 5990, unit: 'шт', isAvailable: true, sku: 'HP-C3' },
-    { name: 'Куртка зимняя', categoryId: getCat('Одежда'), price: 12990, unit: 'шт', isAvailable: true, sku: 'JKT-01' },
-    { name: 'Футболка базовая', categoryId: getCat('Одежда'), price: 990, unit: 'шт', isAvailable: true, sku: 'TS-BASE' },
-    { name: 'Джинсы Slim', categoryId: getCat('Одежда'), price: 3590, unit: 'шт', isAvailable: true, sku: 'JE-SLIM' },
-    { name: 'Кофе зерновой', categoryId: getCat('Продукты'), price: 1290, unit: 'шт', isAvailable: true, sku: 'COF-01' },
-    { name: 'Сок апельсиновый', categoryId: getCat('Продукты'), price: 189, unit: 'шт', isAvailable: true, sku: 'JUI-OR' },
-    { name: 'Орехи микс', categoryId: getCat('Продукты'), price: 790, unit: 'шт', isAvailable: true, sku: 'NUT-MIX' }
+    { name: 'Ноутбук 15" базовый', categoryId: getCat('Ноутбуки'), price: 44990, unit: 'шт', isAvailable: true, sku: 'NB-15-B' },
+    { name: 'Ноутбук 15" Pro', categoryId: getCat('Ноутбуки'), price: 79990, unit: 'шт', isAvailable: true, sku: 'NB-15-P' },
+    { name: 'Ноутбук 13" ультрабук', categoryId: getCat('Ноутбуки'), price: 69990, unit: 'шт', isAvailable: true, sku: 'NB-13-U' },
+    { name: 'Роутер Wi-Fi 5', categoryId: getCat('Роутеры'), price: 2990, unit: 'шт', isAvailable: true, sku: 'RT-W5' },
+    { name: 'Роутер Wi-Fi 6', categoryId: getCat('Роутеры'), price: 5990, unit: 'шт', isAvailable: true, sku: 'RT-W6' },
+    { name: 'Роутер Mesh комплект', categoryId: getCat('Роутеры'), price: 12990, unit: 'шт', isAvailable: true, sku: 'RT-MESH' },
+    { name: 'Модем USB 4G', categoryId: getCat('Модемы'), price: 2490, unit: 'шт', isAvailable: true, sku: 'MD-USB-4G' },
+    { name: 'Модем стационарный 4G', categoryId: getCat('Модемы'), price: 4990, unit: 'шт', isAvailable: true, sku: 'MD-4G-ST' },
+    { name: 'Модем 5G', categoryId: getCat('Модемы'), price: 8990, unit: 'шт', isAvailable: true, sku: 'MD-5G' },
+    { name: 'Смартфон базовый', categoryId: getCat('Смартфоны'), price: 14990, unit: 'шт', isAvailable: true, sku: 'SM-BASE' },
+    { name: 'Смартфон средний', categoryId: getCat('Смартфоны'), price: 29990, unit: 'шт', isAvailable: true, sku: 'SM-MID' },
+    { name: 'Смартфон флагман', categoryId: getCat('Смартфоны'), price: 59990, unit: 'шт', isAvailable: true, sku: 'SM-FLAG' },
+    { name: 'Планшет 8"', categoryId: getCat('Планшеты'), price: 19990, unit: 'шт', isAvailable: true, sku: 'TB-8' },
+    { name: 'Планшет 10"', categoryId: getCat('Планшеты'), price: 34990, unit: 'шт', isAvailable: true, sku: 'TB-10' },
+    { name: 'Планшет 11" Pro', categoryId: getCat('Планшеты'), price: 49990, unit: 'шт', isAvailable: true, sku: 'TB-11-P' }
   ].filter((p) => p.categoryId)
   await prisma.product.createMany({ data: products as any })
 

@@ -117,7 +117,27 @@ export default function Layout() {
         />
       )}
       <aside className="sidebar">
-        <div className="sidebar-brand">Скартел CRM</div>
+        <div className="sidebar-header">
+          <button
+            type="button"
+            className="sidebar-close"
+            aria-label="Закрыть меню"
+            onClick={() => setIsNavOpen(false)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="sidebar-brand">
+          <span className="sidebar-brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 24V8l4 8 4-8 4 8 4-8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="16" cy="16" r="3" fill="currentColor" />
+            </svg>
+          </span>
+          <span className="sidebar-brand-text">Скартел CRM</span>
+          </div>
+        </div>
         <div className="sidebar-search">
           <GlobalSearch />
         </div>
@@ -136,37 +156,19 @@ export default function Layout() {
             )
           })}
         </nav>
-        <div className="sidebar-footer">
-          <div className="sidebar-role">{role ?? '—'}</div>
-          <button
-            type="button"
-            className="theme-toggle-pill"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
-          >
-            <span className="theme-toggle-pill__track">
-              <span className="theme-toggle-pill__handle" data-theme={theme}>
-                {theme === 'light' ? (
-                  <svg className="theme-toggle-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-                  </svg>
-                ) : (
-                  <svg className="theme-toggle-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                  </svg>
-                )}
-              </span>
-            </span>
-          </button>
-          <button className="btn secondary" onClick={onLogout}>Выйти</button>
-        </div>
       </aside>
       <div className="content">
         <header className="topbar">
           <div>
-            <button className="btn secondary topbar-menu" type="button" onClick={() => setIsNavOpen(true)}>
-              Меню
+            <button
+              className="btn secondary topbar-menu"
+              type="button"
+              onClick={() => setIsNavOpen(true)}
+              aria-label="Открыть меню"
+            >
+              <svg className="topbar-menu__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
             <div className="breadcrumbs">
               {pageMeta.breadcrumbs.map((item, index) => {
@@ -183,11 +185,32 @@ export default function Layout() {
             <div className="topbar-title">{pageMeta.title}</div>
             {pageMeta.subtitle && <div className="topbar-subtitle">{pageMeta.subtitle}</div>}
           </div>
-          {canReadReports && (
-            <div className="topbar-actions">
-              <Link className="btn secondary" to="/reports">Отчеты</Link>
-            </div>
-          )}
+          <div className="topbar-actions">
+            {canReadReports && <Link className="btn secondary topbar-reports" to="/reports">Отчеты</Link>}
+            <span className="topbar-role">{role ?? '—'}</span>
+            <button
+              type="button"
+              className="theme-toggle-pill"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
+            >
+              <span className="theme-toggle-pill__track">
+                <span className="theme-toggle-pill__handle" data-theme={theme}>
+                  {theme === 'light' ? (
+                    <svg className="theme-toggle-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="4" />
+                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                    </svg>
+                  ) : (
+                    <svg className="theme-toggle-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                  )}
+                </span>
+              </span>
+            </button>
+            <button className="btn secondary" onClick={onLogout}>Выйти</button>
+          </div>
         </header>
         <main className="page">
           <Outlet />

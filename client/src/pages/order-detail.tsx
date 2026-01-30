@@ -15,13 +15,14 @@ import { SkeletonCard } from '../components/skeleton-card'
 
 export default function OrderDetailPage() {
   const { orderId } = useParams()
-  const { isAuthenticated, initialized, role } = useAuth()
+  const { isAuthenticated, initialized, role, userId } = useAuth()
   const [order, setOrder] = useState<Order | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [client, setClient] = useState<Client | null>(null)
   const { loading, startLoading, stopLoading } = useMinLoading()
   const [savingItems, setSavingItems] = useState(false)
   const [savingStatus, setSavingStatus] = useState(false)
+  const [assigning, setAssigning] = useState(false)
   const [savingComments, setSavingComments] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [editItems, setEditItems] = useState<{ productId: string, quantity: string }[]>([])
@@ -183,6 +184,27 @@ export default function OrderDetailPage() {
     await applyStatusUpdate(statusValue)
   }
 
+  const handleTakeInWork = async () => {
+    if (!order || !userId || !canEditOrder) return
+    const isOpen = order.status !== 'done' && order.status !== 'canceled'
+    if (!isOpen) return
+    setError(null)
+    setAssigning(true)
+    try {
+      const updated = await ordersApi.update(order.id, { managerId: userId })
+      setOrder(updated)
+      if (canReadAudit) {
+        const auditRes = await auditApi.list({ page: 1, pageSize: 20, entityType: 'order', entityId: order.id })
+        setAuditEntries(auditRes.data)
+      }
+      addToast({ type: 'success', title: 'Заказ взят в работу', description: 'Вы назначены ответственным' })
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setAssigning(false)
+    }
+  }
+
   const handleSaveComments = async () => {
     if (!order) return
     setError(null)
@@ -198,6 +220,13 @@ export default function OrderDetailPage() {
       setSavingComments(false)
     }
   }
+
+  const auditActionLabels: Record<string, string> = {
+    'order.created': 'Создан заказ',
+    'order.updated': 'Изменён заказ',
+    'order.status.changed': 'Изменён статус заказа'
+  }
+  const auditActionLabel = (action: string) => auditActionLabels[action] ?? action
 
   const statusLabel = (status: OrderStatus) => orderStatuses.find((s) => s.value === status)?.label ?? status
   const statusClass = (status: OrderStatus) => {
@@ -227,6 +256,8 @@ export default function OrderDetailPage() {
 
   const allowedStatuses = order ? getAllowedNextStatuses(order.status, role) : []
   const canChangeStatus = canWrite && allowedStatuses.length > 0
+  const isOrderOpen = order && order.status !== 'done' && order.status !== 'canceled'
+  const canTakeInWork = isOrderOpen && canEditOrder && userId && order.managerId !== userId
 
   return (
     <div className="page grid" style={{ gap: 16 }}>
@@ -260,6 +291,7 @@ export default function OrderDetailPage() {
               </div>
               <div><strong>Клиент:</strong> {client ? <Link to={`/clients/${client.id}`}>{client.name}</Link> : order.clientId}</div>
               <div><strong>Статус:</strong> <span className={statusClass(order.status)}>{statusLabel(order.status)}</span></div>
+              <div><strong>Ответственный:</strong> {order.managerName ?? order.managerEmail ?? '—'}</div>
               <div><strong>Сумма:</strong> {formatCurrency(order.totalAmount ?? order.total)}</div>
               <div><strong>Комментарий:</strong> {order.comments || '—'}</div>
             </div>
@@ -317,33 +349,29 @@ export default function OrderDetailPage() {
                 </div>
               </div>
             )}
-            {canReadAudit && (
+            {canReadAudit && auditEntries.length > 0 && (
               <div className="grid" style={{ gap: 8 }}>
                 <h4>Аудит изменений</h4>
-                {auditEntries.length === 0 ? (
-                  <div className="empty-state">Записей аудита нет</div>
-                ) : (
-                  <div className="table-wrap">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Действие</th>
-                          <th>Дата</th>
-                          <th>Исполнитель</th>
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Действие</th>
+                        <th>Дата</th>
+                        <th>Исполнитель</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {auditEntries.map((entry) => (
+                        <tr key={entry.id}>
+                          <td>{auditActionLabel(entry.action)}</td>
+                          <td>{new Date(entry.createdAt).toLocaleString()}</td>
+                          <td>{entry.userId ?? '—'}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {auditEntries.map((entry) => (
-                          <tr key={entry.id}>
-                            <td>{entry.action}</td>
-                            <td>{new Date(entry.createdAt).toLocaleString()}</td>
-                            <td>{entry.userId ?? '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
@@ -356,7 +384,7 @@ export default function OrderDetailPage() {
           <div className="skeleton-line" />
         </div>
       )}
-      {order && (
+      {order && order.status !== 'done' && order.status !== 'canceled' && (
         <div className="card">
           <div>
             <h4>Управление заказом</h4>
@@ -406,6 +434,13 @@ export default function OrderDetailPage() {
               </>
             )}
 
+            {canTakeInWork && (
+              <div style={{ marginTop: 12 }}>
+                <button className="btn" type="button" onClick={handleTakeInWork} disabled={assigning}>
+                  {assigning ? 'Назначение…' : 'Взять в работу'}
+                </button>
+              </div>
+            )}
             {canChangeStatus && (
               <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
                 <select className="input" value={statusValue} onChange={(e) => setStatusValue(e.target.value as OrderStatus)}>

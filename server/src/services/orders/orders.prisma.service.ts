@@ -220,9 +220,9 @@ export class OrdersPrismaService {
 
   private mapOrder(order: { total: number, client?: { name: string } | null, manager?: { firstName: string | null, lastName: string | null, email: string } | null }) {
     const { client, manager, ...rest } = order as { total: number, client?: { name: string } | null, manager?: { firstName: string | null, lastName: string | null, email: string } | null, [key: string]: unknown }
-    const managerName = manager?.firstName || manager?.lastName 
-      ? [manager.firstName, manager.lastName].filter(Boolean).join(' ').trim() || undefined
-      : undefined
+    const managerName = manager?.firstName || manager?.lastName
+      ? [manager.firstName, manager.lastName].filter(Boolean).join(' ').trim() || manager?.email
+      : manager?.email
     return {
       ...rest,
       totalAmount: order.total,

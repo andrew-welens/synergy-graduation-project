@@ -381,7 +381,8 @@ export default function CatalogPage() {
           <h3>Товары</h3>
           <span style={{ color: '#64748b', fontSize: 14 }}>{productsTotal}</span>
         </div>
-        <div className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: 12 }}>
+        <p className="card-section-title">Поиск и фильтры</p>
+        <div className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: 16 }}>
           <input className="input" placeholder="Поиск товаров" value={productSearch} onChange={(e) => { setProductSearch(e.target.value); setProductPage(1) }} />
           <select className="input" value={productCategoryId} onChange={(e) => { setProductCategoryId(e.target.value); setProductPage(1) }}>
             <option value="">Все категории</option>
@@ -401,19 +402,16 @@ export default function CatalogPage() {
           </button>
         </div>
         {canWrite && (
-          <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(6, 1fr)', marginBottom: 12 }} onSubmit={handleCreateProduct}>
+          <div className="card-form-block">
+            <p className="card-section-title">Новый товар</p>
+            <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(5, 1fr)' }} onSubmit={handleCreateProduct}>
             <input className="input" required placeholder="Название" value={prodForm.name} onChange={(e) => setProdForm((f) => ({ ...f, name: e.target.value }))} />
             <select className="input" required value={prodForm.categoryId} onChange={(e) => setProdForm((f) => ({ ...f, categoryId: e.target.value }))}>
               <option value="">Категория</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <input className="input" required type="number" min="0" placeholder="Цена" value={prodForm.price} onChange={(e) => setProdForm((f) => ({ ...f, price: e.target.value }))} />
-            <select className="input" value={prodForm.unit} onChange={(e) => setProdForm((f) => ({ ...f, unit: e.target.value as 'шт' | 'усл.' | 'мес.' }))}>
-              <option value="шт">шт</option>
-              <option value="усл.">усл.</option>
-              <option value="мес.">мес.</option>
-            </select>
-            <input className="input" placeholder="SKU" value={prodForm.sku} onChange={(e) => setProdForm((f) => ({ ...f, sku: e.target.value }))} />
+            <input className="input" placeholder="Артикул" value={prodForm.sku} onChange={(e) => setProdForm((f) => ({ ...f, sku: e.target.value }))} />
             <select className="input" value={prodForm.isAvailable ? '1' : '0'} onChange={(e) => setProdForm((f) => ({ ...f, isAvailable: e.target.value === '1' }))}>
               <option value="1">Доступен</option>
               <option value="0">Недоступен</option>
@@ -421,24 +419,20 @@ export default function CatalogPage() {
             <span title={!isCreateProductValid ? createProductDisabledReason : undefined} style={{ display: 'inline-block' }}>
               <button className="btn" type="submit" disabled={loading || !isCreateProductValid}>Добавить</button>
             </span>
-          </form>
+            </form>
+          </div>
         )}
         {loading && <SkeletonTable rows={5} cols={5} />}
         {error && <RetryPanel message={error} onRetry={handleRetry} />}
         {canWrite && editingProductId && (
-          <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 12 }} onSubmit={handleUpdateProduct}>
+          <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(6, 1fr)', marginBottom: 12 }} onSubmit={handleUpdateProduct}>
             <input className="input" required placeholder="Название" value={editProductForm.name} onChange={(e) => setEditProductForm((f) => ({ ...f, name: e.target.value }))} />
             <select className="input" required value={editProductForm.categoryId} onChange={(e) => setEditProductForm((f) => ({ ...f, categoryId: e.target.value }))}>
               <option value="">Категория</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <input className="input" required type="number" min="0" placeholder="Цена" value={editProductForm.price} onChange={(e) => setEditProductForm((f) => ({ ...f, price: e.target.value }))} />
-            <select className="input" value={editProductForm.unit} onChange={(e) => setEditProductForm((f) => ({ ...f, unit: e.target.value as 'шт' | 'усл.' | 'мес.' }))}>
-              <option value="шт">шт</option>
-              <option value="усл.">усл.</option>
-              <option value="мес.">мес.</option>
-            </select>
-            <input className="input" placeholder="SKU" value={editProductForm.sku} onChange={(e) => setEditProductForm((f) => ({ ...f, sku: e.target.value }))} />
+            <input className="input" placeholder="Артикул" value={editProductForm.sku} onChange={(e) => setEditProductForm((f) => ({ ...f, sku: e.target.value }))} />
             <select className="input" value={editProductForm.isAvailable ? '1' : '0'} onChange={(e) => setEditProductForm((f) => ({ ...f, isAvailable: e.target.value === '1' }))}>
               <option value="1">Доступен</option>
               <option value="0">Недоступен</option>
@@ -478,7 +472,7 @@ export default function CatalogPage() {
                       <tr key={p.id}>
                         <td>{p.name}</td>
                         <td>{categories.find((c) => c.id === p.categoryId)?.name ?? p.categoryId}</td>
-                      <td>{p.price} / {p.unit}</td>
+                      <td>{p.price}</td>
                         <td>{p.isAvailable ? 'Да' : 'Нет'}</td>
                         {canWrite && (
                           <td>
@@ -503,7 +497,7 @@ export default function CatalogPage() {
                       </div>
                       <div className="table-mobile-row">
                         <div className="table-mobile-label">Цена</div>
-                        <div className="table-mobile-value">{p.price} / {p.unit}</div>
+                        <div className="table-mobile-value">{p.price}</div>
                       </div>
                       <div className="table-mobile-row">
                         <div className="table-mobile-label">Доступен</div>
