@@ -22,13 +22,19 @@ export const http = {
       ...init
     })
     const data = await parse(res)
-    if ((res.status === 401 || res.status === 403) && !path.startsWith('/auth/login') && !path.startsWith('/auth/refresh')) {
+    if (res.status === 401 && !path.startsWith('/auth/login') && !path.startsWith('/auth/refresh')) {
       const payload = { message: 'Требуется авторизация. Войдите в систему снова.', from: window.location.pathname + window.location.search }
       sessionStorage.setItem(authRedirectStorageKey, JSON.stringify(payload))
       if (!window.location.pathname.startsWith('/login')) {
         window.location.assign('/login')
       }
       throw new Error(payload.message)
+    }
+    if (res.status === 403 && !path.startsWith('/auth/login') && !path.startsWith('/auth/refresh') && !path.startsWith('/auth/logout')) {
+      if (!window.location.pathname.startsWith('/forbidden') && !window.location.pathname.startsWith('/login')) {
+        window.location.assign('/forbidden')
+      }
+      throw new Error('Доступ запрещен')
     }
     if (!res.ok) {
       const message = (data as { message?: string })?.message ?? 'Ошибка запроса'

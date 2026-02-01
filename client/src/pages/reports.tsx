@@ -5,11 +5,8 @@ import { useAuth } from '../utils/auth'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
 import { RetryPanel } from '../components/retry-panel'
-import * as XLSX from 'xlsx'
 import { Link } from 'react-router-dom'
-import { ordersApi } from '../services/orders'
-import { catalogApi } from '../services/catalog'
-import { clientsApi } from '../services/clients'
+import { exportOrdersReport } from '../utils/export-orders-report'
 
 export default function ReportsPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -57,157 +54,13 @@ export default function ReportsPage() {
     setError(null)
     startLoading()
     try {
-      const report = await reportsApi.orders({
+      await exportOrdersReport({
         groupBy: filters.groupBy,
         dateFrom: filters.dateFrom || undefined,
         dateTo: filters.dateTo || undefined,
         status: filters.status || undefined,
         managerId: filters.managerId || undefined
       })
-      const allProducts = []
-      const productsPageSize = 200
-      let productsPage = 1
-      let productsTotal = 0
-      do {
-        const res = await catalogApi.products({ page: productsPage, pageSize: productsPageSize })
-        productsTotal = res.total
-        allProducts.push(...res.data)
-        productsPage += 1
-      } while (allProducts.length < productsTotal)
-      const productMap = new Map(allProducts.map((p) => [p.id, p.name]))
-
-      const allOrders = []
-      const pageSize = 200
-      let page = 1
-      let total = 0
-      do {
-        const res = await ordersApi.list({
-          page,
-          pageSize,
-          status: filters.status || undefined,
-          managerId: filters.managerId || undefined,
-          dateFrom: filters.dateFrom || undefined,
-          dateTo: filters.dateTo || undefined,
-          sortBy: 'createdAt',
-          sortDir: 'asc'
-        })
-        total = res.total
-        allOrders.push(...res.data)
-        page += 1
-      } while (allOrders.length < total)
-
-      const groupLabel = report.groupBy === 'manager' ? 'Менеджер' : report.groupBy === 'day' ? 'Дата' : 'Статус'
-      const summaryHeader = [groupLabel, 'Количество', 'Сумма']
-      const summaryRows = report.data.map((row) => [
-        report.groupBy === 'status' ? statusLabel(row.key as OrderStatus) : row.key,
-        row.count,
-        row.total
-      ])
-      const summarySheetData = [summaryHeader, ...summaryRows]
-      const summaryWorksheet = XLSX.utils.aoa_to_sheet(summarySheetData)
-      summaryWorksheet['!cols'] = [{ wch: 24 }, { wch: 14 }, { wch: 16 }]
-
-      const detailsHeader = ['ID', 'Клиент', 'Статус', 'Сумма', 'Позиции', 'Кол-во товаров', 'Комментарий', 'Ответственный (ФИО)', 'Ответственный (email)', 'Создан', 'Завершен']
-      const detailsRows = allOrders.map((order) => ([
-        order.id,
-        order.clientName ?? order.clientId,
-        statusLabel(order.status),
-        order.totalAmount ?? order.total,
-        order.items?.length ?? 0,
-        order.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0,
-        order.comments ?? '',
-        order.managerName ?? '',
-        order.managerEmail ?? '',
-        new Date(order.createdAt).toLocaleString(),
-        order.completedAt ? new Date(order.completedAt).toLocaleString() : ''
-      ]))
-      const detailsSheetData = [detailsHeader, ...detailsRows]
-      const detailsWorksheet = XLSX.utils.aoa_to_sheet(detailsSheetData)
-      detailsWorksheet['!cols'] = [{ wch: 38 }, { wch: 28 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 16 }, { wch: 28 }, { wch: 26 }, { wch: 28 }, { wch: 20 }, { wch: 20 }]
-
-      const productStats = new Map<string, { productId: string, productName: string, quantity: number, revenue: number, ordersCount: number }>()
-      allOrders.forEach((order) => {
-        const seen = new Set<string>()
-        order.items?.forEach((item) => {
-          const productId = item.productId
-          const current = productStats.get(productId) ?? {
-            productId,
-            productName: productMap.get(productId) ?? productId,
-            quantity: 0,
-            revenue: 0,
-            ordersCount: 0
-          }
-          current.quantity += item.quantity
-          current.revenue += item.quantity * item.price
-          if (!seen.has(productId)) {
-            current.ordersCount += 1
-            seen.add(productId)
-          }
-          productStats.set(productId, current)
-        })
-      })
-
-      const productsHeader = ['Товар ID', 'Товар', 'Кол-во', 'Выручка', 'Заказы']
-      const productsRows = Array.from(productStats.values())
-        .sort((a, b) => b.quantity - a.quantity)
-        .map((row) => [row.productId, row.productName, row.quantity, row.revenue, row.ordersCount])
-      const productsSheetData = [productsHeader, ...productsRows]
-      const productsWorksheet = XLSX.utils.aoa_to_sheet(productsSheetData)
-      productsWorksheet['!cols'] = [{ wch: 38 }, { wch: 32 }, { wch: 12 }, { wch: 16 }, { wch: 12 }]
-
-      const allClients = []
-      const clientsPageSize = 200
-      let clientsPage = 1
-      let clientsTotal = 0
-      do {
-        const res = await clientsApi.list({ page: clientsPage, pageSize: clientsPageSize, sortBy: 'name', sortDir: 'asc' })
-        clientsTotal = res.total
-        allClients.push(...res.data)
-        clientsPage += 1
-      } while (allClients.length < clientsTotal)
-
-      allClients.sort((a, b) => (a.type === 'legal' && b.type === 'individual' ? -1 : a.type === 'individual' && b.type === 'legal' ? 1 : a.name.localeCompare(b.name)))
-
-      const typeLabel = (t: string) => (t === 'legal' ? 'Юр. лицо' : 'Физ. лицо')
-      const clientsHeader = ['ID', 'Наименование', 'Email', 'Телефон', 'Город', 'Адрес', 'Тип', 'ИНН', 'Теги', 'Заказов', 'Взаимодействия', 'Создан', 'Обновлен']
-      const clientsRows = allClients.map((c) => [
-        c.id,
-        c.name,
-        c.email ?? '',
-        c.phone ?? '',
-        c.city ?? '',
-        c.address ?? '',
-        typeLabel(c.type),
-        c.inn ?? '',
-        (c.tags ?? []).join(', '),
-        c.ordersCount ?? 0,
-        c.interactionsCount ?? 0,
-        new Date(c.createdAt).toLocaleString(),
-        new Date(c.updatedAt).toLocaleString()
-      ])
-      const clientsSheetData = [clientsHeader, ...clientsRows]
-      const clientsWorksheet = XLSX.utils.aoa_to_sheet(clientsSheetData)
-      clientsWorksheet['!cols'] = [{ wch: 38 }, { wch: 32 }, { wch: 28 }, { wch: 16 }, { wch: 20 }, { wch: 36 }, { wch: 12 }, { wch: 14 }, { wch: 24 }, { wch: 10 }, { wch: 16 }, { wch: 20 }, { wch: 20 }]
-
-      const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Сводка')
-      XLSX.utils.book_append_sheet(workbook, detailsWorksheet, 'Заказы')
-      XLSX.utils.book_append_sheet(workbook, productsWorksheet, 'Товары')
-      XLSX.utils.book_append_sheet(workbook, clientsWorksheet, 'Клиенты')
-      const now = new Date()
-      const parts = new Intl.DateTimeFormat('ru-RU', {
-        timeZone: 'Europe/Moscow',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      }).formatToParts(now)
-      const getPart = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
-      const timestamp = `${getPart('year')}-${getPart('month')}-${getPart('day')}_${getPart('hour')}-${getPart('minute')}-${getPart('second')}`
-      XLSX.writeFile(workbook, `orders-report-${timestamp}.xlsx`)
     } catch (e) {
       setError((e as Error).message)
     } finally {

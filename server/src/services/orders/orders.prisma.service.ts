@@ -115,7 +115,7 @@ export class OrdersPrismaService {
         throw new ApiError(404, 'NOT_FOUND', 'Not Found')
       }
       const mappedOrder = this.mapOrder(order) as unknown as Order
-      this.ensureUpdateAllowed(role as Role)
+      this.ensureUpdateAllowed(role as Role, dto)
       this.ensureEditable(mappedOrder.status)
       const hasItems = Array.isArray(dto.items)
       const items = hasItems ? await this.resolveItems(dto.items ?? [], tx) : mappedOrder.items
@@ -201,9 +201,15 @@ export class OrdersPrismaService {
     }
   }
 
-  private ensureUpdateAllowed(role: Role) {
-    if (role === 'operator' || role === 'analyst') {
+  private ensureUpdateAllowed(role: Role, dto: UpdateOrderDto) {
+    if (role === 'analyst') {
       throw new ApiError(403, 'FORBIDDEN', 'Недостаточно прав для редактирования заказа')
+    }
+    if (role === 'operator') {
+      const onlyManagerId = dto.managerId !== undefined && !Array.isArray(dto.items) && dto.comments === undefined
+      if (!onlyManagerId) {
+        throw new ApiError(403, 'FORBIDDEN', 'Недостаточно прав для редактирования заказа')
+      }
     }
   }
 

@@ -1,5 +1,41 @@
 export type Role = 'admin' | 'manager' | 'operator' | 'analyst'
 
+export type Permission =
+  | 'clients.read'
+  | 'clients.write'
+  | 'clients.delete'
+  | 'orders.read'
+  | 'orders.write'
+  | 'orders.status.change'
+  | 'catalog.read'
+  | 'catalog.write'
+  | 'reports.read'
+  | 'audit.read'
+  | 'users.manage'
+  | 'interactions.read'
+  | 'interactions.write'
+
+export const rolePermissions: Record<Role, Permission[]> = {
+  admin: [
+    'clients.read', 'clients.write', 'clients.delete',
+    'orders.read', 'orders.write', 'orders.status.change',
+    'catalog.read', 'catalog.write', 'reports.read', 'audit.read',
+    'users.manage', 'interactions.read', 'interactions.write'
+  ],
+  manager: [
+    'clients.read', 'clients.write', 'orders.read', 'orders.write', 'orders.status.change',
+    'catalog.read', 'catalog.write', 'reports.read', 'audit.read',
+    'interactions.read', 'interactions.write'
+  ],
+  operator: [
+    'clients.read', 'clients.write', 'orders.read', 'orders.write', 'orders.status.change',
+    'catalog.read', 'interactions.read', 'interactions.write'
+  ],
+  analyst: [
+    'clients.read', 'reports.read', 'audit.read', 'interactions.read'
+  ]
+}
+
 export interface User {
   id: string
   email: string

@@ -4,8 +4,8 @@ import { clientsApi } from '../services/clients'
 import { ordersApi } from '../services/orders'
 import { catalogApi } from '../services/catalog'
 import { reportsApi } from '../services/reports'
-import * as XLSX from 'xlsx'
 import { useAuth } from '../utils/auth'
+import { exportOrdersReport } from '../utils/export-orders-report'
 import { type Client, type Order, type OrderStatus } from '../services/types'
 import { useMinLoading } from '../hooks/use-min-loading'
 
@@ -90,17 +90,7 @@ export default function DashboardPage() {
     setError(null)
     startLoading()
     try {
-      const report = await reportsApi.orders({ groupBy: 'status' })
-      const groupLabel = report.groupBy === 'manager' ? 'Менеджер' : report.groupBy === 'day' ? 'Дата' : 'Статус'
-      const header = [groupLabel, 'Количество', 'Сумма']
-      const rows = report.data.map((row) => [row.key, row.count, row.total])
-      const sheetData = [header, ...rows]
-      const worksheet = XLSX.utils.aoa_to_sheet(sheetData)
-      worksheet['!cols'] = [{ wch: 24 }, { wch: 14 }, { wch: 16 }]
-      const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Отчет')
-      const datePart = new Date().toISOString().slice(0, 10)
-      XLSX.writeFile(workbook, `orders-report-${datePart}.xlsx`)
+      await exportOrdersReport({ groupBy: 'status' })
     } catch (e) {
       setError((e as Error).message)
     } finally {

@@ -55,6 +55,68 @@ export class ReportsService {
     }
   }
 
+  async exportData(query: OrdersReportQueryDto) {
+    const summary = await this.orders(query)
+    const where: Prisma.OrderWhereInput = {}
+    if (query.status) where.status = query.status
+    if (query.managerId) where.managerId = query.managerId
+    if (query.dateFrom || query.dateTo) {
+      where.createdAt = {}
+      if (query.dateFrom) where.createdAt.gte = new Date(query.dateFrom)
+      if (query.dateTo) where.createdAt.lte = new Date(query.dateTo)
+    }
+    const orderRows = await this.prisma.order.findMany({
+      where,
+      orderBy: { createdAt: 'asc' },
+      include: {
+        items: true,
+        client: { select: { name: true } },
+        manager: { select: { firstName: true, lastName: true, email: true } }
+      }
+    })
+    const orders = orderRows.map((row) => {
+      const managerName = row.manager?.firstName || row.manager?.lastName
+        ? [row.manager.firstName, row.manager.lastName].filter(Boolean).join(' ').trim() || row.manager?.email
+        : row.manager?.email
+      return {
+        id: row.id,
+        clientId: row.clientId,
+        clientName: row.client?.name,
+        status: row.status,
+        total: row.total,
+        totalAmount: row.total,
+        comments: row.comments ?? undefined,
+        managerId: row.managerId ?? undefined,
+        managerName: managerName ?? undefined,
+        managerEmail: row.manager?.email ?? undefined,
+        createdAt: row.createdAt,
+        completedAt: row.completedAt ?? undefined,
+        items: row.items.map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price, total: i.total }))
+      }
+    })
+    const products = await this.prisma.product.findMany({ select: { id: true, name: true } })
+    const clientRows = await this.prisma.client.findMany({
+      orderBy: { name: 'asc' },
+      include: { _count: { select: { orders: true, interactions: true } } }
+    })
+    const clients = clientRows.map((c) => ({
+      id: c.id,
+      name: c.name,
+      email: c.email ?? undefined,
+      phone: c.phone ?? undefined,
+      city: c.city ?? undefined,
+      address: c.address ?? undefined,
+      type: c.type,
+      inn: c.inn ?? undefined,
+      tags: JSON.parse(c.tags) as string[],
+      ordersCount: c._count.orders,
+      interactionsCount: c._count.interactions,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt
+    }))
+    return { summary, orders, products, clients }
+  }
+
   async overdue(query: OverdueReportQueryDto) {
     const page = query.page ?? 1
     const pageSize = query.pageSize ?? 20

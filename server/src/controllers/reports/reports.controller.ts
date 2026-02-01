@@ -26,6 +26,17 @@ export const createReportsRouter = (reportsService: ReportsService, prisma: Pris
   )
 
   router.get(
+    '/export',
+    requirePermissions('reports.read'),
+    validateQuery(OrdersReportQueryDto),
+    asyncHandler(async (req, res) => {
+      const query = res.locals.query as OrdersReportQueryDto
+      const result = await reportsService.exportData(query)
+      sendData(res, result)
+    })
+  )
+
+  router.get(
     '/overdue',
     requirePermissions('reports.read'),
     validateQuery(OverdueReportQueryDto),

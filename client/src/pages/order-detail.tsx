@@ -185,14 +185,18 @@ export default function OrderDetailPage() {
   }
 
   const handleTakeInWork = async () => {
-    if (!order || !userId || !canEditOrder) return
+    if (!order || !userId || !canWrite) return
     const isOpen = order.status !== 'done' && order.status !== 'canceled'
     if (!isOpen) return
     setError(null)
     setAssigning(true)
     try {
       const updated = await ordersApi.update(order.id, { managerId: userId })
-      setOrder(updated)
+      const final = order.status === 'new'
+        ? await ordersApi.updateStatus(order.id, 'in_progress')
+        : updated
+      setOrder(final)
+      setStatusValue('')
       if (canReadAudit) {
         const auditRes = await auditApi.list({ page: 1, pageSize: 20, entityType: 'order', entityId: order.id })
         setAuditEntries(auditRes.data)
@@ -257,7 +261,8 @@ export default function OrderDetailPage() {
   const allowedStatuses = order ? getAllowedNextStatuses(order.status, role) : []
   const canChangeStatus = canWrite && allowedStatuses.length > 0
   const isOrderOpen = order && order.status !== 'done' && order.status !== 'canceled'
-  const canTakeInWork = isOrderOpen && canEditOrder && userId && order.managerId !== userId
+  const canTakeInWork = isOrderOpen && canWrite && userId && order.managerId !== userId
+  const hasOrderManagementAccess = canEditOrder || canChangeStatus || canTakeInWork
 
   return (
     <div className="page grid" style={{ gap: 16 }}>
@@ -384,7 +389,7 @@ export default function OrderDetailPage() {
           <div className="skeleton-line" />
         </div>
       )}
-      {order && order.status !== 'done' && order.status !== 'canceled' && (
+      {order && order.status !== 'done' && order.status !== 'canceled' && hasOrderManagementAccess && (
         <div className="card">
           <div>
             <h4>Управление заказом</h4>

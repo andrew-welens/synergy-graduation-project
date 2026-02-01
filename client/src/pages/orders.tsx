@@ -70,6 +70,7 @@ export default function OrdersPage() {
 
   const canWrite = role === 'admin' || role === 'manager' || role === 'operator'
   const canReadCatalog = role === 'admin' || role === 'manager' || role === 'operator'
+  const canManageUsers = role === 'admin'
   const createQuantity = Number(form.qty)
   const isCreateValid = Boolean(form.clientId) && Boolean(form.productId) && Number.isFinite(createQuantity) && createQuantity > 0
   const createDisabledReason = !form.clientId
@@ -140,6 +141,7 @@ export default function OrdersPage() {
   useEffect(() => {
     if (!initialized || !isAuthenticated) return
     startLoading()
+    const usersPromise = canManageUsers ? usersApi.list() : Promise.resolve([] as User[])
     Promise.all([
       ordersApi.list({
         page,
@@ -152,7 +154,7 @@ export default function OrdersPage() {
         sortDir
       }),
       clientsApi.list({ page: 1, pageSize: 100 }),
-      usersApi.list()
+      usersPromise
     ])
       .then(async ([ordersRes, clientsRes, usersRes]) => {
         setData(ordersRes.data)
@@ -168,7 +170,7 @@ export default function OrdersPage() {
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, page, pageSize, filters, canReadCatalog, sortBy, sortDir, reloadKey])
+  }, [initialized, isAuthenticated, page, pageSize, filters, canReadCatalog, canManageUsers, sortBy, sortDir, reloadKey])
 
   const handleRetry = () => {
     setError(null)
