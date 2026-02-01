@@ -15,7 +15,7 @@ const accessCookie = {
 
 const refreshCookie = {
   name: 'refreshToken',
-  options: { httpOnly: true, sameSite: 'lax' as const, secure: false, maxAge: 7 * 24 * 60 * 60 * 1000, path: '/' }
+  options: { httpOnly: true, sameSite: 'lax' as const, secure: false, maxAge: 30 * 60 * 1000, path: '/' }
 }
 
 export const createAuthRouter = (authService: AuthService, prisma: PrismaService) => {

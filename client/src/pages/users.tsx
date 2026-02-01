@@ -122,6 +122,9 @@ export default function UsersPage() {
     }
   }
 
+  const editingUser = editingId ? data.find((u) => u.id === editingId) : null
+  const isEditingAdmin = editingUser?.role === 'admin'
+
   const confirmDelete = (user: User) => {
     setConfirmState({
       isOpen: true,
@@ -153,9 +156,13 @@ export default function UsersPage() {
         <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 12 }} onSubmit={handleUpdate}>
           <input className="input" placeholder="Email" type="email" value={editForm.email} onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))} />
           <input className="input" placeholder="Новый пароль (опц.)" type="password" value={editForm.password} onChange={(e) => setEditForm((f) => ({ ...f, password: e.target.value }))} />
-          <select className="input" value={editForm.role} onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value as Role }))}>
-            {roles.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
+          {isEditingAdmin ? (
+            <span className="input" style={{ display: 'flex', alignItems: 'center' }}>admin</span>
+          ) : (
+            <select className="input" value={editForm.role} onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value as Role }))}>
+              {roles.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          )}
           <div style={{ display: 'flex', gap: 8 }}>
             <span title={!isEditValid ? editDisabledReason : undefined} style={{ display: 'inline-block' }}>
               <button className="btn" type="submit" disabled={loading || !isEditValid}>Сохранить</button>
@@ -205,7 +212,9 @@ export default function UsersPage() {
                         <td>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button className="btn secondary" type="button" onClick={() => startEdit(u)}>Редактировать</button>
-                            <button className="btn secondary" type="button" onClick={() => confirmDelete(u)}>Удалить</button>
+                            {u.role !== 'admin' && (
+                              <button className="btn secondary" type="button" onClick={() => confirmDelete(u)}>Удалить</button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -242,7 +251,9 @@ export default function UsersPage() {
                     </div>
                     <div className="table-mobile-actions">
                       <button className="btn secondary" type="button" onClick={() => startEdit(u)}>Редактировать</button>
-                      <button className="btn secondary" type="button" onClick={() => confirmDelete(u)}>Удалить</button>
+                      {u.role !== 'admin' && (
+                        <button className="btn secondary" type="button" onClick={() => confirmDelete(u)}>Удалить</button>
+                      )}
                     </div>
                   </div>
                 ))}

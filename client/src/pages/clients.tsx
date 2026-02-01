@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { clientsApi } from '../services/clients'
 import { type Client } from '../services/types'
 import { useAuth } from '../utils/auth'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { ConfirmDialog } from '../components/confirm-dialog'
 import { RetryPanel } from '../components/retry-panel'
@@ -11,7 +11,6 @@ import { useDebounce } from '../hooks/use-debounce'
 import { SkeletonTable } from '../components/skeleton-table'
 import { Pagination } from '../components/pagination'
 import { EmptyState } from '../components/empty-state'
-import { Tooltip } from '../components/tooltip'
 
 export default function ClientsPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -40,6 +39,7 @@ export default function ClientsPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const addToast = useToast((state) => state.add)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const normalizePhone = (value: string) => value.replace(/\D/g, '')
   const normalizeInn = (value: string) => value.replace(/\D/g, '').slice(0, 10)
@@ -216,16 +216,17 @@ export default function ClientsPage() {
   useEffect(() => {
     const handleBackdropClick = (event: Event) => {
       const target = event.target as HTMLElement
-      const menu = target.closest('details.menu[open]')
-      if (menu && !menu.querySelector('.menu-content')?.contains(target)) {
-        menu.removeAttribute('open')
-      }
+      document.querySelectorAll('details.menu[open]').forEach((menu) => {
+        const content = menu.querySelector('.menu-content')
+        if (content && !content.contains(target)) {
+          menu.removeAttribute('open')
+        }
+      })
     }
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        const openMenus = document.querySelectorAll('details.menu[open]')
-        openMenus.forEach((menu) => {
+        document.querySelectorAll('details.menu[open]').forEach((menu) => {
           menu.removeAttribute('open')
         })
       }
@@ -250,6 +251,16 @@ export default function ClientsPage() {
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
   }, [initialized, isAuthenticated, onlyWithOrders, debouncedSearch, typeFilter, page, pageSize, sortBy, sortDir, reloadKey])
+
+  useEffect(() => {
+    if (searchParams.get('create') === '1' && canWrite) {
+      setFormMode('create')
+      setIsFormOpen(true)
+      setFieldErrors({})
+      setForm({ name: '', email: '', phone: '+7 ', city: '', address: '', tags: '', type: 'legal', inn: '' })
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, canWrite, setSearchParams])
 
   const handleRetry = () => {
     setError(null)
@@ -434,13 +445,9 @@ export default function ClientsPage() {
                       <td className="text-right">{c.interactionsCount ?? 0}</td>
                       <td>
                         <div className="actions-row">
-                          <Tooltip content="Открыть карточку клиента">
-                            <Link to={`/clients/${c.id}`} className="btn secondary">Открыть</Link>
-                          </Tooltip>
+                          <Link to={`/clients/${c.id}`} className="btn secondary">Открыть</Link>
                           <details className="menu">
-                            <Tooltip content="Дополнительные действия">
-                              <summary className="btn secondary">⋯</summary>
-                            </Tooltip>
+                            <summary className="btn secondary">⋯</summary>
                             <div className="menu-content" onClick={(e) => e.stopPropagation()}>
                               <div className="menu-header">
                                 <div className="menu-title">Действия</div>

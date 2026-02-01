@@ -43,6 +43,9 @@ export class UsersService {
 
   async update(actorId: string, id: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id)
+    if ((user.role as Role) === 'admin' && dto.role !== undefined && dto.role !== 'admin') {
+      throw new ApiError(400, 'VALIDATION_ERROR', 'Нельзя изменить роль учётной записи администратора')
+    }
     const roleChanged = Boolean(dto.role && dto.role !== user.role)
     if (dto.email && dto.email !== user.email) {
       const exists = await this.prisma.user.findUnique({ where: { email: dto.email } })
@@ -50,6 +53,7 @@ export class UsersService {
         throw new ApiError(400, 'VALIDATION_ERROR', 'Email уже используется')
       }
     }
+    const effectiveRole = (user.role as Role) === 'admin' ? 'admin' : (dto.role ?? user.role)
     const updated = await this.prisma.user.update({
       where: { id },
       data: {
@@ -57,7 +61,7 @@ export class UsersService {
         firstName: dto.firstName !== undefined ? dto.firstName?.trim() : user.firstName ?? null,
         lastName: dto.lastName !== undefined ? dto.lastName?.trim() : user.lastName ?? null,
         passwordHash: dto.password ? bcrypt.hashSync(dto.password, 10) : user.passwordHash,
-        role: dto.role ?? user.role,
+        role: effectiveRole,
         isActive: dto.isActive !== undefined ? dto.isActive : user.isActive ?? true
       }
     })
@@ -72,6 +76,9 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id } })
     if (!user) {
       throw new ApiError(404, 'NOT_FOUND', 'Not Found')
+    }
+    if ((user.role as Role) === 'admin') {
+      throw new ApiError(400, 'VALIDATION_ERROR', 'Нельзя удалить учётную запись администратора')
     }
     await this.prisma.user.delete({ where: { id } })
     await this.auditService.record(actorId, 'user.deleted', 'user', id)

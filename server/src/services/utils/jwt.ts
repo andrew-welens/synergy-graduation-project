@@ -15,7 +15,7 @@ export const signAccessToken = (payload: JwtPayload) => {
 }
 
 export const signRefreshToken = (payload: JwtPayload) => {
-  return jwt.sign(payload, refreshSecret(), { expiresIn: '7d' })
+  return jwt.sign(payload, refreshSecret(), { expiresIn: '30m' })
 }
 
 export const verifyAccessToken = (token: string) => {

@@ -158,26 +158,60 @@ export function GlobalSearch() {
     }
   }, [isOpen])
 
+  const clearSearch = () => {
+    setQuery('')
+    setResults([])
+    setIsOpen(false)
+    inputRef.current?.focus()
+  }
+
   return (
     <div ref={searchRef} style={{ position: 'relative', width: '100%' }}>
-      <input
-        ref={inputRef}
-        className="input"
-        placeholder="Поиск клиентов и заказов (/)"
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value)
-          if (e.target.value.trim().length >= 2) {
-            setIsOpen(true)
-          }
-        }}
-        onFocus={() => {
-          if (results.length > 0) {
-            setIsOpen(true)
-          }
-        }}
-        onKeyDown={handleKeyDown}
-      />
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <input
+          ref={inputRef}
+          className="input"
+          placeholder="Поиск клиентов и заказов"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            if (e.target.value.trim().length >= 2) {
+              setIsOpen(true)
+            }
+          }}
+          onFocus={() => {
+            if (results.length > 0) {
+              setIsOpen(true)
+            }
+          }}
+          onKeyDown={handleKeyDown}
+          style={{ paddingRight: query ? 32 : undefined }}
+        />
+        {query && (
+          <button
+            type="button"
+            aria-label="Очистить"
+            onClick={clearSearch}
+            style={{
+              position: 'absolute',
+              right: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 20,
+              height: 20,
+              padding: 0,
+              border: 'none',
+              background: 'transparent',
+              color: '#64748b',
+              cursor: 'pointer',
+              borderRadius: 4
+            }}
+          >
+            ×
+          </button>
+        )}
+      </div>
       {isOpen && debouncedQuery.trim().length >= 2 && (
         <div className="global-search-results">
           {isLoading ? (

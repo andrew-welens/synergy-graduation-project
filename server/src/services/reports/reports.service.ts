@@ -3,6 +3,17 @@ import { OrdersReportQueryDto } from '../../controllers/reports/dto/orders-repor
 import { OverdueReportQueryDto } from '../../controllers/reports/dto/overdue-report-query.dto'
 import { OrderStatus } from '../types/models'
 import type { Prisma } from '@prisma/client'
+import { CreateAnalyticsReportDto } from '../../controllers/reports/dto/create-analytics-report.dto'
+import { ApiError } from '../common/errors/api-error'
+
+export interface AnalyticsReportRow {
+  id: string
+  userId: string
+  name: string
+  reportType: string
+  params: Record<string, unknown> | null
+  createdAt: Date
+}
 
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}

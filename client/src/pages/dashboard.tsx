@@ -15,11 +15,19 @@ export default function DashboardPage() {
   const { loading, startLoading, stopLoading } = useMinLoading()
   const [error, setError] = useState<string | null>(null)
   const [counts, setCounts] = useState({ clients: 0, orders: 0, products: 0 })
+  const [revenue, setRevenue] = useState<{ income: number, averageCheck: number } | null>(null)
   const [trend, setTrend] = useState<number[]>([])
   const [recentOrders, setRecentOrders] = useState<Order[]>([])
   const [recentClients, setRecentClients] = useState<Client[]>([])
   const trendMax = useMemo(() => Math.max(1, ...trend), [trend])
   const trendLabels = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
+  const recentOrdersSorted = useMemo(() => {
+    return [...recentOrders].sort((a, b) => {
+      if (a.status === 'new' && b.status !== 'new') return -1
+      if (a.status !== 'new' && b.status === 'new') return 1
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+  }, [recentOrders])
 
   const orderStatuses: { value: OrderStatus, label: string }[] = [
     { value: 'new', label: 'Новый' },
@@ -51,20 +59,31 @@ export default function DashboardPage() {
     startLoading()
     Promise.all([
       clientsApi.list({ page: 1, pageSize: 50 }),
-      ordersApi.list({ page: 1, pageSize: 5 })
+      ordersApi.list({ page: 1, pageSize: 5 }),
+      ...(canReadCatalog ? [catalogApi.products({ page: 1, pageSize: 1 })] : []),
+      ...(canReadReports ? [reportsApi.orders({ groupBy: 'status' })] : [])
     ])
-      .then(async ([clientsRes, ordersRes]) => {
-        const productsTotal = canReadCatalog
-          ? (await catalogApi.products({ page: 1, pageSize: 1 })).total
-          : 0
+      .then((results) => {
+        const [clientsRes, ordersRes] = results as [{ total: number, data: Client[] }, { total: number, data: Order[] }]
+        let idx = 2
+        const productsTotal = canReadCatalog ? (results[idx++] as { total: number }).total : 0
+        const report = canReadReports ? (results[idx] as { data: { key: string, count: number, total: number }[] }) : null
         setCounts({ clients: clientsRes.total, orders: ordersRes.total, products: productsTotal })
         setRecentOrders(ordersRes.data)
         setRecentClients(clientsRes.data)
         setTrend([12, 28, 18, 35, 22, 48, 30, 52, 36, 60, 44, 72])
+        if (report) {
+          const doneRow = report.data.find((r) => r.key === 'done')
+          setRevenue(doneRow
+            ? { income: doneRow.total, averageCheck: doneRow.count > 0 ? Math.round(doneRow.total / doneRow.count) : 0 }
+            : { income: 0, averageCheck: 0 })
+        } else {
+          setRevenue(null)
+        }
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
-  }, [initialized, isAuthenticated, canReadCatalog])
+  }, [initialized, isAuthenticated, canReadCatalog, canReadReports])
 
   const handleExport = async () => {
     if (!canReadReports) return
@@ -97,6 +116,18 @@ export default function DashboardPage() {
 
   return (
     <div className="grid" style={{ gap: 16 }}>
+      {hasQuickActions && (
+        <div className="card" style={{ padding: '12px 16px' }}>
+          <div className="toolbar" style={{ marginBottom: 0 }}>
+            <h3 style={{ margin: 0 }}>Быстрые действия</h3>
+            <div className="toolbar-actions">
+              {canWriteClients && <Link className="btn secondary" to="/clients?create=1">Добавить клиента</Link>}
+              {canWriteOrders && <Link className="btn secondary" to="/orders?create=1">Создать заказ</Link>}
+              {canWriteCatalog && <Link className="btn secondary" to="/catalog?create=product">Добавить товар</Link>}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="card">
         <div className="toolbar">
           <div>
@@ -162,8 +193,8 @@ export default function DashboardPage() {
         <div className="grid stats-sidebar" style={{ gap: 12 }}>
           <div className="stat-card">
             <div className="stat-label">Доход</div>
-            <div className="stat-value">{formatCurrency(Math.round(counts.orders * 1480))}</div>
-            <div className="stat-meta" style={{ color: '#7c94c9' }}><span className="stat-meta-text">Средний чек {formatCurrency(1480)}</span></div>
+            <div className="stat-value">{revenue !== null ? formatCurrency(revenue.income) : formatCurrency(Math.round(counts.orders * 1480))}</div>
+            <div className="stat-meta" style={{ color: '#7c94c9' }}><span className="stat-meta-text">Средний чек {revenue !== null ? formatCurrency(revenue.averageCheck) : formatCurrency(1480)}</span></div>
           </div>
           <div className="stat-card">
             <div className="stat-label">Просроченные</div>
@@ -207,7 +238,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentOrders.map((order) => (
+                  {recentOrdersSorted.map((order) => (
                     <tr key={order.id}>
                       <td><Link to={`/orders/${order.id}`}>{order.id}</Link></td>
                       <td>{order.clientName ?? recentClients.find((c) => c.id === order.clientId)?.name ?? order.clientId}</td>
@@ -219,7 +250,7 @@ export default function DashboardPage() {
               </table>
             </div>
             <div className="table-mobile">
-              {recentOrders.map((order) => (
+              {recentOrdersSorted.map((order) => (
                 <div key={order.id} className="table-mobile-card">
                   <div className="table-mobile-row">
                     <div className="table-mobile-label">ID</div>
@@ -243,17 +274,6 @@ export default function DashboardPage() {
           </>
         )}
       </div>
-
-      {hasQuickActions && (
-        <div className="card">
-          <h3>Быстрые действия</h3>
-          <div className="actions-row" style={{ marginTop: 8 }}>
-            {canWriteClients && <Link className="btn secondary" to="/clients">Добавить клиента</Link>}
-            {canWriteOrders && <Link className="btn secondary" to="/orders">Создать заказ</Link>}
-            {canWriteCatalog && <Link className="btn secondary" to="/catalog">Добавить товар</Link>}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

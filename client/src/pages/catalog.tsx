@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { catalogApi } from '../services/catalog'
 import { type Category, type Product } from '../services/types'
 import { useAuth } from '../utils/auth'
@@ -8,6 +8,7 @@ import { useDebounce } from '../hooks/use-debounce'
 import { SkeletonTable } from '../components/skeleton-table'
 import { Pagination } from '../components/pagination'
 import { EmptyState } from '../components/empty-state'
+import { useSearchParams } from 'react-router-dom'
 
 export default function CatalogPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -40,6 +41,8 @@ export default function CatalogPage() {
   const categoriesTotalPages = Math.max(1, Math.ceil(categoriesTotal / categoriesPageSize))
   const productsTotalPages = Math.max(1, Math.ceil(productsTotal / productsPageSize))
   const [reloadKey, setReloadKey] = useState(0)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const productFormRef = useRef<HTMLDivElement>(null)
   const sortedCategories = [...categories].sort((a, b) => {
     const multiplier = categorySortDir === 'asc' ? 1 : -1
     if (categorySortBy === 'createdAt') {
@@ -108,6 +111,15 @@ export default function CatalogPage() {
       .catch((e) => setError((e as Error).message))
       .finally(() => stopLoading())
   }, [initialized, isAuthenticated, canRead, debouncedCategorySearch, debouncedProductSearch, productCategoryId, productAvailability, categoryPage, productPage, categoriesPageSize, productsPageSize, reloadKey])
+
+  useEffect(() => {
+    if (searchParams.get('create') !== 'product' || !canWrite) return
+    setSearchParams({}, { replace: true })
+    const id = setTimeout(() => {
+      productFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 0)
+    return () => clearTimeout(id)
+  }, [searchParams, canWrite, setSearchParams])
 
   const handleRetry = () => {
     setError(null)
@@ -402,7 +414,7 @@ export default function CatalogPage() {
           </button>
         </div>
         {canWrite && (
-          <div className="card-form-block">
+          <div className="card-form-block" ref={productFormRef}>
             <p className="card-section-title">Новый товар</p>
             <form className="grid" style={{ gap: 8, gridTemplateColumns: 'repeat(5, 1fr)' }} onSubmit={handleCreateProduct}>
             <input className="input" required placeholder="Название" value={prodForm.name} onChange={(e) => setProdForm((f) => ({ ...f, name: e.target.value }))} />

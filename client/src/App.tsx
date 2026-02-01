@@ -12,6 +12,7 @@ import AuditPage from './pages/audit'
 import ReportsPage from './pages/reports'
 import UsersPage from './pages/users'
 import ForbiddenPage from './pages/forbidden'
+import NotFoundPage from './pages/not-found'
 import ProfilePage from './pages/profile'
 import Layout from './components/layout'
 import Protected from './components/protected'
@@ -61,7 +62,7 @@ const routes: RouteObject[] = [
   },
   { path: '/login', element: <LoginPage /> },
   { path: '/forbidden', element: <ForbiddenPage /> },
-  { path: '*', element: <Suspense fallback={<div>...</div>}><div>404</div></Suspense> }
+  { path: '*', element: <NotFoundPage /> }
 ]
 
 export default routes

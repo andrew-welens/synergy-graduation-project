@@ -638,7 +638,7 @@ npx prisma studio
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/synergy
 JWT_SECRET=your-secret-key-change-in-production-must-be-at-least-32-characters
-JWT_EXPIRES_IN=7d
+JWT_EXPIRES_IN=30m
 PORT=3000
 CORS_ORIGINS=http://localhost:5173
 ```
@@ -653,7 +653,7 @@ SERVER_PORT=3000
 CLIENT_PORT=80
 DATABASE_URL=postgresql://user:password@localhost:5432/synergy
 JWT_SECRET=your-secret-key-change-in-production-must-be-at-least-32-characters
-JWT_EXPIRES_IN=7d
+JWT_EXPIRES_IN=30m
 CORS_ORIGINS=http://localhost:5173
 ```
 

@@ -33,7 +33,8 @@ async function main() {
     { email: 'manager2@example.com', role: 'manager', firstName: 'Анна', lastName: 'Смирнова' },
     { email: 'manager3@example.com', role: 'manager', firstName: 'Артем', lastName: 'Ковалев' },
     { email: 'operator1@example.com', role: 'operator', firstName: 'Мария', lastName: 'Лебедева' },
-    { email: 'operator2@example.com', role: 'operator', firstName: 'Павел', lastName: 'Никифоров' }
+    { email: 'operator2@example.com', role: 'operator', firstName: 'Павел', lastName: 'Никифоров' },
+    { email: 'analyst1@example.com', role: 'analyst', firstName: 'Ольга', lastName: 'Соколова' }
   ]
   for (const user of staffUsers) {
     await prisma.user.upsert({
@@ -55,55 +56,55 @@ async function main() {
   })
 
   const firstNames = [
-    { ru: 'Алексей', en: 'alexey' },
-    { ru: 'Артем', en: 'artem' },
-    { ru: 'Борис', en: 'boris' },
-    { ru: 'Вадим', en: 'vadim' },
-    { ru: 'Валерий', en: 'valeriy' },
-    { ru: 'Виктор', en: 'viktor' },
-    { ru: 'Виталий', en: 'vitaliy' },
-    { ru: 'Глеб', en: 'gleb' },
-    { ru: 'Григорий', en: 'grigory' },
-    { ru: 'Даниил', en: 'daniil' },
-    { ru: 'Денис', en: 'denis' },
-    { ru: 'Евгений', en: 'evgeniy' },
-    { ru: 'Елисей', en: 'elisey' },
-    { ru: 'Илья', en: 'ilya' },
-    { ru: 'Кирилл', en: 'kirill' },
-    { ru: 'Константин', en: 'konstantin' },
-    { ru: 'Лев', en: 'lev' },
-    { ru: 'Максим', en: 'maksim' },
-    { ru: 'Матвей', en: 'matvey' },
-    { ru: 'Марк', en: 'mark' },
-    { ru: 'Николай', en: 'nikolay' },
-    { ru: 'Павел', en: 'pavel' },
-    { ru: 'Петр', en: 'petr' },
-    { ru: 'Роман', en: 'roman' },
-    { ru: 'Руслан', en: 'ruslan' },
-    { ru: 'Савелий', en: 'saveliy' },
-    { ru: 'Семен', en: 'semen' },
-    { ru: 'Степан', en: 'stepan' },
-    { ru: 'Тимофей', en: 'timofey' },
-    { ru: 'Федор', en: 'fedor' },
-    { ru: 'Юрий', en: 'yuriy' },
-    { ru: 'Ярослав', en: 'yaroslav' },
-    { ru: 'Антон', en: 'anton' },
-    { ru: 'Анатолий', en: 'anatoliy' },
-    { ru: 'Вячеслав', en: 'vyacheslav' },
-    { ru: 'Егор', en: 'egor' },
-    { ru: 'Игорь', en: 'igor' },
-    { ru: 'Леонид', en: 'leonid' },
-    { ru: 'Михаил', en: 'mikhail' },
-    { ru: 'Станислав', en: 'stanislav' },
-    { ru: 'Тарас', en: 'taras' },
-    { ru: 'Филипп', en: 'filipp' },
-    { ru: 'Эдуард', en: 'eduard' },
-    { ru: 'Арсений', en: 'arseniy' },
-    { ru: 'Богдан', en: 'bogdan' },
-    { ru: 'Вениамин', en: 'veniamin' },
-    { ru: 'Герман', en: 'german' },
-    { ru: 'Давид', en: 'david' },
-    { ru: 'Жанна', en: 'zhanna' }
+    { ru: 'Алексей', en: 'alexey', gender: 'm' as const },
+    { ru: 'Артем', en: 'artem', gender: 'm' as const },
+    { ru: 'Борис', en: 'boris', gender: 'm' as const },
+    { ru: 'Вадим', en: 'vadim', gender: 'm' as const },
+    { ru: 'Валерий', en: 'valeriy', gender: 'm' as const },
+    { ru: 'Виктор', en: 'viktor', gender: 'm' as const },
+    { ru: 'Виталий', en: 'vitaliy', gender: 'm' as const },
+    { ru: 'Глеб', en: 'gleb', gender: 'm' as const },
+    { ru: 'Григорий', en: 'grigory', gender: 'm' as const },
+    { ru: 'Даниил', en: 'daniil', gender: 'm' as const },
+    { ru: 'Денис', en: 'denis', gender: 'm' as const },
+    { ru: 'Евгений', en: 'evgeniy', gender: 'm' as const },
+    { ru: 'Елисей', en: 'elisey', gender: 'm' as const },
+    { ru: 'Илья', en: 'ilya', gender: 'm' as const },
+    { ru: 'Кирилл', en: 'kirill', gender: 'm' as const },
+    { ru: 'Константин', en: 'konstantin', gender: 'm' as const },
+    { ru: 'Лев', en: 'lev', gender: 'm' as const },
+    { ru: 'Максим', en: 'maksim', gender: 'm' as const },
+    { ru: 'Матвей', en: 'matvey', gender: 'm' as const },
+    { ru: 'Марк', en: 'mark', gender: 'm' as const },
+    { ru: 'Николай', en: 'nikolay', gender: 'm' as const },
+    { ru: 'Павел', en: 'pavel', gender: 'm' as const },
+    { ru: 'Петр', en: 'petr', gender: 'm' as const },
+    { ru: 'Роман', en: 'roman', gender: 'm' as const },
+    { ru: 'Руслан', en: 'ruslan', gender: 'm' as const },
+    { ru: 'Савелий', en: 'saveliy', gender: 'm' as const },
+    { ru: 'Семен', en: 'semen', gender: 'm' as const },
+    { ru: 'Степан', en: 'stepan', gender: 'm' as const },
+    { ru: 'Тимофей', en: 'timofey', gender: 'm' as const },
+    { ru: 'Федор', en: 'fedor', gender: 'm' as const },
+    { ru: 'Юрий', en: 'yuriy', gender: 'm' as const },
+    { ru: 'Ярослав', en: 'yaroslav', gender: 'm' as const },
+    { ru: 'Антон', en: 'anton', gender: 'm' as const },
+    { ru: 'Анатолий', en: 'anatoliy', gender: 'm' as const },
+    { ru: 'Вячеслав', en: 'vyacheslav', gender: 'm' as const },
+    { ru: 'Егор', en: 'egor', gender: 'm' as const },
+    { ru: 'Игорь', en: 'igor', gender: 'm' as const },
+    { ru: 'Леонид', en: 'leonid', gender: 'm' as const },
+    { ru: 'Михаил', en: 'mikhail', gender: 'm' as const },
+    { ru: 'Станислав', en: 'stanislav', gender: 'm' as const },
+    { ru: 'Тарас', en: 'taras', gender: 'm' as const },
+    { ru: 'Филипп', en: 'filipp', gender: 'm' as const },
+    { ru: 'Эдуард', en: 'eduard', gender: 'm' as const },
+    { ru: 'Арсений', en: 'arseniy', gender: 'm' as const },
+    { ru: 'Богдан', en: 'bogdan', gender: 'm' as const },
+    { ru: 'Вениамин', en: 'veniamin', gender: 'm' as const },
+    { ru: 'Герман', en: 'german', gender: 'm' as const },
+    { ru: 'Давид', en: 'david', gender: 'm' as const },
+    { ru: 'Жанна', en: 'zhanna', gender: 'f' as const }
   ]
   const lastNamePrefixes = [
     'Альт',
@@ -197,7 +198,7 @@ async function main() {
   const lastNames = lastNameSuffixes
     .flatMap((suffix) => lastNamePrefixes.map((prefix) => `${prefix}${suffix}`))
     .map((ru) => ({ ru, en: toEn(ru) }))
-  const middleNames = [
+  const middleNamesMale = [
     'Алексеевич',
     'Анатольевич',
     'Андреевич',
@@ -230,7 +231,9 @@ async function main() {
     'Тимофеевич',
     'Федорович',
     'Юрьевич',
-    'Ярославович',
+    'Ярославович'
+  ]
+  const middleNamesFemale = [
     'Алексеевна',
     'Анатольевна',
     'Андреевна',
@@ -278,7 +281,8 @@ async function main() {
   const clients = Array.from({ length: 250 }).map((_, idx) => {
     const first = firstNames[idx % firstNames.length]
     const last = lastNames[idx]
-    const middle = middleNames[idx % middleNames.length]
+    const middlePool = first.gender === 'm' ? middleNamesMale : middleNamesFemale
+    const middle = middlePool[idx % middlePool.length]
     const city = cities[idx % cities.length]
     const street = streets[idx % streets.length]
     const isLegal = idx % 3 === 0

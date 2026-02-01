@@ -4,7 +4,7 @@ import { type Order, type Client, type Product, type OrderStatus, type User } fr
 import { useAuth } from '../utils/auth'
 import { clientsApi } from '../services/clients'
 import { catalogApi } from '../services/catalog'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useMinLoading } from '../hooks/use-min-loading'
 import { AppDateRangePicker } from '../components/date-range-picker'
 import { useToast } from '../utils/toast'
@@ -35,6 +35,7 @@ export default function OrdersPage() {
   const addToast = useToast((state) => state.add)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [reloadKey, setReloadKey] = useState(0)
 
   const orderStatuses: { value: OrderStatus, label: string }[] = [
@@ -122,11 +123,19 @@ export default function OrdersPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const clientIdParam = params.get('clientId')
-    if (clientIdParam) {
+    const createParam = params.get('create')
+    if (createParam === '1' && canWrite) {
+      openCreateForm()
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('create')
+        return next
+      }, { replace: true })
+    } else if (clientIdParam) {
       setForm((prev) => ({ ...prev, clientId: clientIdParam }))
       setIsFormOpen(true)
     }
-  }, [location.search])
+  }, [location.search, canWrite, setSearchParams])
 
   useEffect(() => {
     if (!initialized || !isAuthenticated) return
@@ -404,10 +413,12 @@ export default function OrdersPage() {
               <div>
                 <input className="input" placeholder="Комментарий" value={form.comments} onChange={(e) => setForm((f) => ({ ...f, comments: e.target.value }))} />
               </div>
-              <span title={!isCreateValid ? createDisabledReason : undefined} style={{ display: 'inline-block' }}>
-                <button className="btn" type="submit" disabled={loading || !isCreateValid}>Создать</button>
-              </span>
-              <button className="btn secondary" type="button" onClick={closeForm}>Отмена</button>
+              <div className="actions-row" style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <span title={!isCreateValid ? createDisabledReason : undefined} style={{ minWidth: 0 }}>
+                  <button className="btn" type="submit" disabled={loading || !isCreateValid} style={{ width: '100%', justifyContent: 'center' }}>Создать</button>
+                </span>
+                <button className="btn secondary" type="button" onClick={closeForm} style={{ width: '100%', justifyContent: 'center' }}>Отмена</button>
+              </div>
               {formError && <div className="form-error">{formError}</div>}
             </form>
           </div>

@@ -28,7 +28,7 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-synergy}:${POSTGRES_PASSWORD:-synergy}@postgres:5432/${POSTGRES_DB:-synergy}
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-30m}
     ports:
       - "${SERVER_PORT:-3000}:3000"
     depends_on:
