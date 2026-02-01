@@ -1,7 +1,10 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useRef, useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../utils/auth'
 import { useTheme } from '../utils/theme'
+import AuthLoader from '../components/auth-loader'
+
+const AUTH_LOADER_MIN_MS = 750
 
 export default function LoginPage() {
   const { isAuthenticated, login, loading, error } = useAuth()
@@ -17,6 +20,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('password')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [authMessage, setAuthMessage] = useState<string | null>(sessionMessage)
+  const [showLoader, setShowLoader] = useState(false)
+  const loaderStartedAtRef = useRef<number | null>(null)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -28,13 +33,52 @@ export default function LoginPage() {
     if (!password.trim()) errors.password = 'Введите пароль'
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
+    loaderStartedAtRef.current = Date.now()
+    setShowLoader(true)
     await login(email, password)
-    sessionStorage.removeItem('authRedirect')
-    navigate(from)
+    const elapsed = Date.now() - (loaderStartedAtRef.current ?? 0)
+    const remaining = Math.max(0, AUTH_LOADER_MIN_MS - elapsed)
+    await new Promise((r) => setTimeout(r, remaining))
+    setShowLoader(false)
+    if (useAuth.getState().isAuthenticated) {
+      sessionStorage.removeItem('authRedirect')
+      navigate(from)
+    }
   }
 
   if (isAuthenticated) {
     return <Navigate to={from} replace />
+  }
+
+  if (showLoader || loading) {
+    return (
+      <div className="auth-page">
+        <button
+          type="button"
+          className="theme-toggle-pill auth-theme-toggle"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
+        >
+          <span className="theme-toggle-pill__track">
+            <span className="theme-toggle-pill__handle" data-theme={theme}>
+              {theme === 'light' ? (
+                <svg className="theme-toggle-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              ) : (
+                <svg className="theme-toggle-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </span>
+          </span>
+        </button>
+        <div className="card auth-card">
+          <AuthLoader />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -73,7 +117,7 @@ export default function LoginPage() {
           </div>
           {authMessage && <div className="form-error">{authMessage}</div>}
           {error && <div className="form-error">{error}</div>}
-          <button className="btn" type="submit" disabled={loading}>{loading ? '...' : 'Войти'}</button>
+          <button className="btn" type="submit" disabled={loading}>Войти</button>
         </form>
       </div>
     </div>

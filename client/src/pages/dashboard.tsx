@@ -8,6 +8,7 @@ import { useAuth } from '../utils/auth'
 import { exportOrdersReport } from '../utils/export-orders-report'
 import { type Client, type Order, type OrderStatus } from '../services/types'
 import { useMinLoading } from '../hooks/use-min-loading'
+import { SkeletonTable } from '../components/skeleton-table'
 
 export default function DashboardPage() {
   const { isAuthenticated, initialized, role } = useAuth()
@@ -53,6 +54,7 @@ export default function DashboardPage() {
   const canWriteOrders = role === 'admin' || role === 'manager' || role === 'operator'
   const canWriteCatalog = role === 'admin' || role === 'manager'
   const hasQuickActions = canWriteClients || canWriteOrders || canWriteCatalog
+  const showStatsSkeleton = loading || trend.length === 0
 
   useEffect(() => {
     if (!initialized || !isAuthenticated) return
@@ -131,9 +133,19 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-        {loading && <div>Загрузка...</div>}
+        {showStatsSkeleton && (
+          <div className="grid stats-grid" style={{ gap: 16, gridTemplateColumns: canReadCatalog ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', marginTop: 20 }}>
+            {Array.from({ length: canReadCatalog ? 4 : 3 }).map((_, i) => (
+              <div key={i} className="skeleton-stat-card">
+                <div className="skeleton-line" />
+                <div className="skeleton-line" />
+                <div className="skeleton-line" />
+              </div>
+            ))}
+          </div>
+        )}
         {error && <div style={{ color: '#f87171' }}>{error}</div>}
-        {!loading && !error && (
+        {!showStatsSkeleton && !error && (
           <div className="grid stats-grid" style={{ gap: 16, gridTemplateColumns: canReadCatalog ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', marginTop: 20 }}>
             <div className="stat-card">
               <div className="stat-label">Клиенты</div>
@@ -167,6 +179,18 @@ export default function DashboardPage() {
             <h3>Динамика заказов</h3>
             <div className="topbar-subtitle">Янв–Дек</div>
           </div>
+          {showStatsSkeleton && (
+            <div className="chart">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="chart-item">
+                  <div className="skeleton-line" style={{ height: 12, width: 24, margin: '0 auto' }} />
+                  <div className="skeleton-chart-bar" style={{ height: `${30 + (i % 5) * 14}%` }} />
+                  <div className="skeleton-line" style={{ height: 10, width: 20, margin: '0 auto' }} />
+                </div>
+              ))}
+            </div>
+          )}
+          {!showStatsSkeleton && (
           <div className="chart">
             {trend.map((value, index) => (
               <div key={index} className="chart-item">
@@ -179,8 +203,22 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+          )}
         </div>
         <div className="grid stats-sidebar" style={{ gap: 12 }}>
+          {showStatsSkeleton && (
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="skeleton-stat-card">
+                  <div className="skeleton-line" />
+                  <div className="skeleton-line" />
+                  <div className="skeleton-line" />
+                </div>
+              ))}
+            </>
+          )}
+          {!showStatsSkeleton && (
+          <>
           <div className="stat-card">
             <div className="stat-label">Доход</div>
             <div className="stat-value">{revenue !== null ? formatCurrency(revenue.income) : formatCurrency(Math.round(counts.orders * 1480))}</div>
@@ -196,6 +234,8 @@ export default function DashboardPage() {
             <div className="stat-value">{Math.max(3, Math.round(counts.clients / 10))}</div>
             <div className="stat-meta" style={{ color: '#7c94c9' }}><span className="stat-meta-text">Распределение нагрузки</span></div>
           </div>
+          </>
+          )}
         </div>
       </div>
 
@@ -206,12 +246,7 @@ export default function DashboardPage() {
             <Link className="btn secondary" to="/orders">Все заказы</Link>
           </div>
         </div>
-        {loading && (
-          <div className="skeleton">
-            <div className="skeleton-card" />
-            <div className="skeleton-card" />
-          </div>
-        )}
+        {loading && <SkeletonTable rows={5} cols={4} />}
         {!loading && recentOrders.length === 0 && (
           <div className="empty-state">Нет заказов</div>
         )}

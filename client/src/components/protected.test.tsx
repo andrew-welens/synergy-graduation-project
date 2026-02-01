@@ -46,7 +46,7 @@ describe('Protected', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText('Проверка сессии...')).toBeInTheDocument()
+    expect(screen.getByText('Загрузка данных...')).toBeInTheDocument()
   })
 
   it('should redirect to login when not authenticated', () => {
