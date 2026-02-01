@@ -159,8 +159,8 @@ npm install
 # Создайте .env файл
 cp .env.example .env
 
-# Настройте DATABASE_URL в .env
-# DATABASE_URL="postgresql://user:password@localhost:5432/synergy"
+# Заполните в .env реальные значения (пароль БД, JWT_SECRET).
+# Файл .env не коммитится в git — секреты хранятся только локально.
 
 # Генерация Prisma клиента
 npx prisma generate
@@ -196,7 +196,7 @@ npm run dev
 # Создайте .env файл в корне проекта
 cp .env.example .env
 
-# Отредактируйте .env, особенно JWT_SECRET для production
+# Заполните в .env реальные пароль БД и JWT_SECRET (значения не хранятся в репозитории)
 
 # Запуск всех сервисов
 docker-compose up -d
@@ -634,28 +634,14 @@ npx prisma studio
 
 ### Переменные окружения
 
-**Backend (.env в server/)**
-```
-DATABASE_URL=postgresql://user:password@localhost:5432/synergy
-JWT_SECRET=your-secret-key-change-in-production-must-be-at-least-32-characters
-JWT_EXPIRES_IN=30m
-PORT=3000
-CORS_ORIGINS=http://localhost:5173
-```
+Файлы `.env` не коммитятся в git. Скопируйте `.env.example` в `.env` и подставьте свои значения. Реальные пароли и JWT_SECRET храните только в локальном `.env` или в секретах CI/хостинга.
 
-**Docker (.env в корне)**
-```
-POSTGRES_USER=synergy
-POSTGRES_PASSWORD=synergy
-POSTGRES_DB=synergy
-POSTGRES_PORT=5432
-SERVER_PORT=3000
-CLIENT_PORT=80
-DATABASE_URL=postgresql://user:password@localhost:5432/synergy
-JWT_SECRET=your-secret-key-change-in-production-must-be-at-least-32-characters
-JWT_EXPIRES_IN=30m
-CORS_ORIGINS=http://localhost:5173
-```
+**Backend (.env в server/)** — см. `server/.env.example` при наличии или корневой `.env.example`:
+- `DATABASE_URL` — строка подключения PostgreSQL (`postgresql://user:password@host:port/dbname`)
+- `JWT_SECRET` — секрет для подписи JWT (не менее 32 символов)
+- `JWT_EXPIRES_IN`, `PORT`, `CORS_ORIGINS`
+
+**Docker (.env в корне)** — переменные для `docker-compose`: пользователь/пароль/БД PostgreSQL, порты, `JWT_SECRET`, `CORS_ORIGINS`. Имена переменных совпадают с `.env.example`.
 
 **Важно:**
 - В **production** режиме валидация переменных окружения обязательна:
