@@ -16,9 +16,10 @@
 **/.yarn/
 **/.pnpm-store/
 
-# Environment files
-/.env
-/.env.*
+# Environment files (secrets — not in repo)
+.env
+.env.*
+!.env.example
 
 # Angular CLI and build artefacts
 /.angular-cli.json
